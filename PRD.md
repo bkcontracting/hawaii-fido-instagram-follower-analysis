@@ -69,7 +69,6 @@ Hawaii Fi-Do is a service dog nonprofit organization. To grow community support 
    - Claims a "pending" follower from the database
    - Navigates to their Instagram profile
    - Extracts profile data (see Data Model below)
-   - Uses Claude thinking to classify the account
    - Updates database record with enriched data
    - Marks record as "completed"
 3. Implement delays (3-5 seconds) between requests to avoid detection
@@ -151,7 +150,7 @@ followers (
   confidence      REAL,               -- Classification confidence 0-1
 
   -- Scoring (Phase 2)
-  priority_score  REAL,               -- Final ranking score
+  priority_score  INTEGER,            -- Final ranking score
   priority_reason TEXT,               -- Why this score
 
   -- Metadata
@@ -228,7 +227,6 @@ Rules are evaluated in priority order — first match wins. All keyword checks s
 - `pet_industry` is rule 2 — requires business signal to exclude nonprofits
 - `organization` excludes charity keywords to prevent "foundation" overlap
 - Rules scan **handle + display_name + bio** (not just bio) for keyword matches
-- `elected_official` scans handle too (catches handles like `augietulba.hnl`)
 - `business_local`/`business_national` moved after keyword-based categories
 
 The classifier returns `{category, subcategory, confidence}` where confidence reflects signal strength (0.3–0.9).
@@ -259,7 +257,7 @@ Multiple signals compound (capped at 1.0). Examples:
 - "Aloha! Based in NYC" → <= 0.3 (weak signal alone)
 - No Hawaii signals → 0.0
 
-`is_hawaii(text) -> bool` returns True if any signal matches (binary check).
+`is_hawaii(text) -> bool` returns True if `hawaii_confidence(text) >= 0.4`.
 
 ---
 
@@ -276,6 +274,7 @@ Base Score:
   - Elected official:      +25 points  (increased — gov't funding channels)
   - Business account:      +20 points
   - Media/event:           +15 points  (NEW)
+  - Influencer:            +20 points  (NEW)
   - Verified:              +10 points
 
 Reach Score (based on followers):
@@ -311,6 +310,7 @@ Penalties:
 | Hawaii pet store + website | above + website(5) | 80 | Tier 1 |
 | Hawaii councilmember, verified, 10k+ | hawaii(30) + elected(25) + verified(10) + reach(15) | 80 | Tier 1 |
 | Hawaii church, 5k followers, website | hawaii(30) + org(25) + reach(10) + website(5) | 70 | Tier 2 |
+| Non-Hawaii influencer, 50k+, website | influencer(20) + reach(20) + website(5) | 45 | Tier 3 |
 
 ### Final Tiers
 
@@ -500,7 +500,9 @@ process_batch(db_path: str, batch: list[dict], fetcher_fn) -> dict
 
 run_with_retries(db_path: str, batch: list[dict], fetcher_fn) -> dict
 # Returns {completed: int, errors: int, retries_used: int, exhausted: bool}
-# Retries up to MAX_RETRIES times. Resets error records to 'pending' between attempts.
+# Attempts up to MAX_RETRIES total times (including the initial attempt).
+# Before each retry, filters the batch to only error records, then re-calls process_batch.
+# Resets error records to 'pending' between attempts.
 # After final retry, errors become permanent.
 
 run_all(db_path: str, fetcher_fn) -> dict
@@ -553,8 +555,8 @@ On fetcher error for a single follower: `status='error'`, `error_message` saved,
 ### Retry Semantics
 
 1. `run_with_retries` calls `process_batch`
-2. If errors remain, resets those followers from `status='error'` back to `status='pending'`
-3. Calls `process_batch` again (up to MAX_RETRIES total attempts)
+2. If errors remain, filters the batch to only error records, resets them from `status='error'` back to `status='pending'`
+3. Re-calls `process_batch` with only the filtered error records (up to MAX_RETRIES total attempts including the initial attempt)
 4. After final attempt, any remaining errors become permanent (`status='error'`)
 5. Returns `{exhausted: True}` if errors remain after all retries
 
@@ -576,7 +578,7 @@ On fetcher error for a single follower: `status='error'`, `error_message` saved,
 | 2 | `database` | 2.1 Schema, 2.2 Insert, 2.3 Queries | Group 8 |
 | 3 | `location_detector` | 3.1 Signals, 3.2 Confidence | Group 8 |
 | 4 | `classifier` | 4.1 Categories, 4.2 Rules | Group 3 |
-| 5 | `scorer` | 5.1 Score, 5.2 Factors, 5.3 Tiers | Group 3, 4 |
+| 5 | `scorer` | 5.1 Score, 5.2 Factors, 5.3 Tiers | Group 3, 4 (test data only) |
 | 6 | `batch_orchestrator` | 6.1 Batch, 6.2 Process, 6.3 Retry, 6.4 Loop | Groups 2, 3, 4, 5 |
 | 7 | `pipeline` | 7.1 Phase 1, 7.2 Phase 2 | Groups 1, 6 |
 | 9 | `skills` | 9.1 prospects, 9.2 summary, 9.3 donors, 9.4 outreach, 9.5 export | Groups 5, 7 |
@@ -639,7 +641,7 @@ All fixtures live in `tests/fixtures/` and must be created before module impleme
 | Handle | Category | Key Fields |
 |--------|----------|-----------|
 | (business) | `business_local` | `is_hawaii=True`, `is_business=True`, bio "Pet supplies in Kailua" |
-| (charity/nonprofit) | `charity` | bio with charity keywords |
+| (organization) | `organization` | `is_hawaii=True`, bio "Rotary Club of Honolulu" |
 | (personal) | `influencer` | `follower_count >= 10000` |
 | (unicode) | `personal_engaged` | `post_count > 50` |
 | (website) | `spam_bot` | `following >> followers`, `post_count < 5` |
