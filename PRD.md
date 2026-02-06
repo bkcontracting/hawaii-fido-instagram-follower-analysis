@@ -76,42 +76,49 @@ Hawaii Fi-Do is a service dog nonprofit organization. To grow community support 
 
 **Output:** Enriched database with full profile data and classifications
 
-### Phase 3: Analysis & Ranking
+### Phase 3: Interactive Analysis (Slash Commands)
 
-**Input:** Completed SQLite database
+**Input:** Completed SQLite database at `data/followers.db`
 
-**Process:**
-1. Launch fresh Claude Code session with clean context
-2. Load enriched follower data
-3. Apply scoring algorithm (see Scoring section)
-4. Generate ranked recommendations with reasoning
+Phase 3 replaces static file generation with **5 Claude Code slash commands** that query the database live. Each command has smart defaults (useful with zero arguments) and optional filters for drilling down.
 
-**Output:** Three files in the output directory:
+**Architecture:** All 5 commands are prompt-driven Claude Code skills (`.claude/skills/` markdown files). They instruct Claude to query SQLite directly and format results as markdown tables in the terminal. No new Python source modules are needed for Phase 3. The DB path `data/followers.db` is auto-detected relative to project root.
 
-**`top_prospects.csv`** — followers with score >= 60, sorted by priority_score descending:
-```
-handle, display_name, category, priority_score, tier, priority_reason,
-follower_count, bio, website, is_hawaii, profile_url
-```
+#### `/prospects` — Top Engagement Candidates
+- **Default:** score >= 60, sorted by priority_score desc, limit 25
+- **Filters:** `--category`, `--min-score`, `--hawaii`, `--limit`
+- **Columns:** handle, display_name, category, priority_score, tier, priority_reason, follower_count, is_hawaii
 
-**`full_export.csv`** — all followers regardless of score:
-```
-handle, display_name, category, subcategory, priority_score, tier,
-priority_reason, follower_count, following_count, post_count, bio,
-website, is_verified, is_private, is_business, is_hawaii, location,
-confidence, status, profile_url
-```
+#### `/summary` — Analysis Dashboard
+- **Default:** Full statistical overview:
+  - Total follower count + status breakdown
+  - Hawaii vs. non-Hawaii (count + avg score)
+  - Category breakdown (count + avg score per category)
+  - Tier distribution
+  - Top 10 overall
+  - Top 5 per category
+  - "Needs Review" list (unknown + error accounts)
 
-**`analysis_summary.md`** containing:
-  - Total follower count
-  - Breakdown by Hawaii vs. non-Hawaii (count + average score)
-  - Breakdown by category (count + average score per category)
-  - Count per scoring tier
-  - Top 10 prospects overall listed by name and score
-  - Top 10 per category (not just overall top 10)
-  - "Needs Review" section listing unknown and error accounts
+#### `/donors` — Financial Resource Targets
+- **Default:** bank_financial + business_local + organization with score >= 50, sorted by priority_score desc
+- **Filters:** `--hawaii`, `--min-score`
+- **Columns:** handle, display_name, category, subcategory, priority_score, bio (truncated 80 chars), website
 
-If no enriched data exists, exports are created with headers only and summary notes "No enriched data available".
+#### `/outreach` — Actionable Contact List
+- **Default:** Top 20 prospects grouped by tier
+- **Filters:** `--category`, `--tier`
+- **Columns:** handle, display_name, category, priority_score, bio (truncated), website, profile_url
+
+#### `/export` — File Export (preserves original static export behavior)
+- **Default:** Writes all 3 files to `output/`:
+  - `top_prospects.csv` — score >= 60, sorted by priority_score desc
+  - `full_export.csv` — all followers
+  - `analysis_summary.md` — full statistical breakdown
+- **Flags:** `--prospects`, `--full`, `--summary` to export just one
+- **`top_prospects.csv` columns:** handle, display_name, category, priority_score, tier, priority_reason, follower_count, bio, website, is_hawaii, profile_url
+- **`full_export.csv` columns:** handle, display_name, category, subcategory, priority_score, tier, priority_reason, follower_count, following_count, post_count, bio, website, is_verified, is_private, is_business, is_hawaii, location, confidence, status, profile_url
+- **`analysis_summary.md` contents:** Total follower count, Hawaii vs. non-Hawaii breakdown (count + avg score), category breakdown (count + avg score per category), tier distribution, top 10 overall, top 10 per category, "Needs Review" section (unknown + error accounts)
+- If no enriched data exists, exports are created with headers only and summary notes "No enriched data available".
 
 ---
 
@@ -396,9 +403,11 @@ Estimated time remaining: ~45 minutes
 - Updated `data/followers.db` with enriched, classified, and scored records
 
 ### Phase 3 Output
-- `output/top_prospects.csv` — high-value prospects (score >= 60)
-- `output/full_export.csv` — complete follower dataset
-- `output/analysis_summary.md` — stats, Hawaii breakdown, category breakdown, tier breakdown, top 10 overall + per category, needs review
+- `.claude/skills/prospects.md` — /prospects slash command
+- `.claude/skills/summary.md` — /summary slash command
+- `.claude/skills/donors.md` — /donors slash command
+- `.claude/skills/outreach.md` — /outreach slash command
+- `.claude/skills/export.md` — /export slash command
 
 ---
 
@@ -508,10 +517,6 @@ run_phase2(db_path: str, fetcher_fn) -> dict
 # Returns {batches_run: int, total_completed: int, total_errors: int, stopped: bool}
 # Calls: run_all (handles batching, retries internally)
 # Returns immediately with {batches_run: 0} if no pending records.
-
-run_phase3(db_path: str, output_dir: str) -> dict
-# Returns {top_prospects: int, total_exported: int}
-# Writes: top_prospects.csv, full_export.csv, analysis_summary.md
 ```
 
 ---
@@ -570,7 +575,8 @@ On fetcher error for a single follower: `status='error'`, `error_message` saved,
 | 4 | `classifier` | 4.1 Categories, 4.2 Rules | Group 3 |
 | 5 | `scorer` | 5.1 Score, 5.2 Factors, 5.3 Tiers | Group 3, 4 |
 | 6 | `batch_orchestrator` | 6.1 Batch, 6.2 Process, 6.3 Retry, 6.4 Loop | Groups 2, 3, 4, 5 |
-| 7 | `pipeline` | 7.1 Phase 1, 7.2 Phase 2, 7.3 Phase 3 | Groups 1, 6 |
+| 7 | `pipeline` | 7.1 Phase 1, 7.2 Phase 2 | Groups 1, 6 |
+| 9 | `skills` | 9.1 prospects, 9.2 summary, 9.3 donors, 9.4 outreach, 9.5 export | Groups 5, 7 |
 
 ### Parallelization Map
 
@@ -590,9 +596,11 @@ Parallel:  Group 1   Group 2   Group 3
 Sequential:          Group 6 ←────┘
                        ↓
                     Group 7
+                       ↓
+                    Group 9
 ```
 
-Groups 1, 2, and 3 can run as parallel subagents (they write to separate files with no shared imports). Group 4 depends on 3. Group 5 depends on 3 and 4. Group 6 depends on 2, 3, 4, 5. Group 7 depends on everything.
+Groups 1, 2, and 3 can run as parallel subagents (they write to separate files with no shared imports). Group 4 depends on 3. Group 5 depends on 3 and 4. Group 6 depends on 2, 3, 4, 5. Group 7 depends on 1 and 6. Group 9 (skills) depends on 5 and 7.
 
 ---
 
