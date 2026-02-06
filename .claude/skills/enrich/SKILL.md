@@ -1,3 +1,8 @@
+---
+name: enrich
+description: Enrich all Instagram followers in the database by visiting each profile via browser automation
+---
+
 # Instagram Profile Enrichment Skill
 
 ## Description
