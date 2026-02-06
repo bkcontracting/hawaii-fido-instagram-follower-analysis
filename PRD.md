@@ -64,14 +64,16 @@ Hawaii Fi-Do is a service dog nonprofit organization. To grow community support 
 **Input:** SQLite database of followers
 
 **Process:**
-1. Launch 2 parallel browser subagents
-2. Each agent:
-   - Claims a "pending" follower from the database
-   - Navigates to their Instagram profile
-   - Extracts profile data (see Data Model below)
-   - Updates database record with enriched data
+1. Run via `/enrich` slash command, which orchestrates the full pipeline
+2. Launch 2 parallel browser subagents, each processing batches of `BATCH_SIZE`
+3. Each agent:
+   - Claims a batch of pending followers from the database
+   - Navigates to each Instagram profile
+   - Extracts page text via JS `innerText` (~200 tokens vs ~15K for accessibility tree)
+   - Parses deterministically with `profile_parser.py` (zero LLM reasoning tokens)
+   - Classifies, scores, and updates database record
    - Marks record as "completed"
-3. Implement delays (3-5 seconds) between requests to avoid detection
+4. Implement delays (3-5 seconds) between requests to avoid detection
 
 **Output:** Enriched database with full profile data and classifications
 
@@ -79,9 +81,15 @@ Hawaii Fi-Do is a service dog nonprofit organization. To grow community support 
 
 **Input:** Completed SQLite database at `data/followers.db`
 
-Phase 3 replaces static file generation with **5 Claude Code slash commands** that query the database live. Each command has smart defaults (useful with zero arguments) and optional filters for drilling down.
+Phase 3 replaces static file generation with **6 Claude Code slash commands** that query the database live. Each command has smart defaults (useful with zero arguments) and optional filters for drilling down.
 
-**Architecture:** All 5 commands are prompt-driven Claude Code skills (`.claude/skills/` markdown files). They instruct Claude to query SQLite directly and format results as markdown tables in the terminal. No new Python source modules are needed for Phase 3. The DB path `data/followers.db` is auto-detected relative to project root.
+**Architecture:** All 6 commands are prompt-driven Claude Code skills (`.claude/skills/` markdown files). The analysis commands instruct Claude to query SQLite directly and format results as markdown tables in the terminal. The `/enrich` command orchestrates Phase 2 browser automation. The DB path `data/followers.db` is auto-detected relative to project root.
+
+#### `/enrich` — Profile Enrichment Orchestrator
+- Launches 2 parallel browser subagents to enrich pending followers
+- Uses `profile_parser.py` for deterministic extraction (zero LLM parsing tokens)
+- JS `innerText` extraction (~200 tokens vs ~15K for accessibility tree)
+- Processes in batches of `BATCH_SIZE` with crash recovery and retry logic
 
 #### `/prospects` — Top Engagement Candidates
 - **Default:** score >= 60, sorted by priority_score desc, limit 25
@@ -404,6 +412,8 @@ Estimated time remaining: ~45 minutes
 
 ### Phase 2 Output
 - Updated `data/followers.db` with enriched, classified, and scored records
+- `.claude/skills/enrich.md` — /enrich slash command (Phase 2 orchestration)
+- `src/profile_parser.py` — Deterministic profile page parser
 
 ### Phase 3 Output
 - `.claude/skills/prospects.md` — /prospects slash command
@@ -522,6 +532,25 @@ run_phase2(db_path: str, fetcher_fn) -> dict
 # Returns {batches_run: int, total_completed: int, total_errors: int, stopped: bool}
 # Calls: run_all (handles batching, retries internally)
 # Returns immediately with {batches_run: 0} if no pending records.
+```
+
+### `src/profile_parser.py`
+```python
+parse_count(text: str) -> int | None
+# Converts Instagram abbreviated counts to integers.
+# Handles K/M/B suffixes, commas, floating point precision.
+# "64.1K" → 64100, "2.5M" → 2500000, "1,234" → 1234
+# Returns None if text is empty or unparseable.
+
+detect_page_state(text: str) -> str
+# Detects Instagram page condition from raw page text.
+# Returns: 'normal', 'not_found', 'suspended', 'rate_limited', 'login_required'
+
+parse_profile_page(text: str) -> dict
+# Deterministic extraction from raw page text (innerText or accessibility tree).
+# Returns: {follower_count, following_count, post_count, bio, website,
+#           is_verified, is_private, is_business, page_state}
+# Saves ~500-1000 LLM tokens per profile by replacing reasoning with regex.
 ```
 
 ---
@@ -681,6 +710,7 @@ Each module lives in its own file. Import rules:
 - `location_detector.py` — no imports from other `src/` modules
 - `classifier.py` — imports `location_detector` only
 - `scorer.py` — no imports from other `src/` modules
+- `profile_parser.py` — no imports from other `src/` modules (used by `/enrich` subagents)
 - `batch_orchestrator.py` — imports `database`, `location_detector`, `classifier`, `scorer`, `config`
 - `pipeline.py` — imports all above
 

@@ -31,6 +31,7 @@ Automated tool to analyze [Hawaii Fi-Do's](https://www.instagram.com/hawaiifido/
 │   ├── location_detector.py    # Hawaii confidence scoring
 │   ├── classifier.py           # Account categorization (13 categories)
 │   ├── scorer.py               # Priority scoring (0–100) + tier assignment
+│   ├── profile_parser.py       # Deterministic Instagram page parser
 │   ├── batch_orchestrator.py   # Batch processing with retry logic
 │   └── pipeline.py             # End-to-end phase runners
 ├── tests/
@@ -49,6 +50,12 @@ cd hawaii-fido-instagram-follower-analysis
 
 Place your `followers_validated.csv` in `data/`.
 
+**Prerequisites:**
+- Python 3.9+ (stdlib only — no external dependencies for core modules)
+- `pytest` for running tests
+- Claude Code with Claude-in-Chrome MCP (for Phase 2 browser automation)
+- Logged-in Instagram session in the browser before running `/enrich`
+
 ## Usage
 
 ### Phase 1 — Parse CSV into database
@@ -61,13 +68,25 @@ result = run_phase1("data/followers_validated.csv", "data/followers.db")
 
 ### Phase 2 — Enrich profiles via browser
 
+Run the `/enrich` slash command in Claude Code:
+
+```
+/enrich
+```
+
+This launches 2 parallel browser subagents that visit each profile, extract data via `profile_parser.py` (deterministic, zero LLM tokens), classify, score, and update the database. Processes in batches of 5 with 3–5 second delays between profile visits.
+
+Requires a logged-in Instagram session via Claude-in-Chrome MCP.
+
+<details>
+<summary>Python API (advanced)</summary>
+
 ```python
 from src.pipeline import run_phase2
 result = run_phase2("data/followers.db", fetcher_fn)
 # {'batches_run': 42, 'total_completed': 822, 'total_errors': 8}
 ```
-
-Requires a logged-in Instagram session via Claude-in-Chrome MCP. Processes in batches of 5 with 3–5 second delays between profile visits.
+</details>
 
 ### Phase 3 — Analyze with slash commands
 
@@ -75,6 +94,7 @@ Run these in Claude Code with the project open:
 
 | Command | Description |
 |---------|-------------|
+| `/enrich` | Enrich pending profiles via browser automation |
 | `/prospects` | Top engagement candidates (score >= 60) |
 | `/summary` | Full statistical dashboard |
 | `/donors` | Financial resource targets (banks, businesses, orgs) |
