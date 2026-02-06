@@ -4,7 +4,7 @@ import sqlite3
 
 from src import config
 from src.database import get_pending, update_follower, get_status_counts
-from src.location_detector import is_hawaii, hawaii_confidence
+from src.location_detector import is_hawaii
 from src.classifier import classify
 from src.scorer import score
 
@@ -73,7 +73,6 @@ def process_batch(db_path, batch, fetcher_fn):
             combined_text = f"{handle} {display_name} {bio}"
 
             hi = is_hawaii(combined_text)
-            hi_conf = hawaii_confidence(combined_text)
 
             profile = {**enriched, "handle": handle, "display_name": display_name,
                        "is_hawaii": hi}

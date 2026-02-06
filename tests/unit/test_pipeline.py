@@ -74,3 +74,4 @@ class TestRunPhase2:
         assert "total_completed" in result
         assert "total_errors" in result
         assert "stopped" in result
+        assert "reason" in result

@@ -1,6 +1,4 @@
 """Classify Instagram profiles into categories using 13 priority-ordered rules."""
-import re
-from src.location_detector import is_hawaii as detect_hawaii
 
 
 # ── Keyword lists ──────────────────────────────────────────────────
@@ -12,7 +10,7 @@ _PET_KEYWORDS = [
 
 _COMMERCIAL_SIGNALS = ["shop", "store", "service", "clinic", "supply", "co", "inc"]
 
-_CHARITY_KEYWORDS = ["rescue", "humane", "nonprofit", "501c", "shelter", "charity", "foundation"]
+_CHARITY_KEYWORDS = ["rescue", "humane", "nonprofit", "501c", "shelter", "charity"]
 
 _ORG_KEYWORDS = ["church", "school", "rotary", "club", "golf"]
 
@@ -20,7 +18,7 @@ _ELECTED_KEYWORDS = ["council", "mayor", "senator", "representative", "governor"
 
 _MEDIA_KEYWORDS = [
     "event", "tournament", "festival", "magazine", "news",
-    "photographer", "media", "press",
+    "photographer", "media", "press", "open",
 ]
 
 
@@ -98,7 +96,7 @@ def _business_subcategory(text):
         return "real_estate"
     if "retail" in text or "boutique" in text or "shop" in text:
         return "retail"
-    return "service"
+    return "general"
 
 
 # ── Main classifier ───────────────────────────────────────────────

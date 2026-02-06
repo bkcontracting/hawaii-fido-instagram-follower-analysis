@@ -204,6 +204,10 @@ class TestRule6MediaEvent:
         r = classify(_profile(handle="oahu_media"))
         assert r["category"] == "media_event"
 
+    def test_open_keyword(self):
+        r = classify(_profile(bio="Kailua Open surf competition"))
+        assert r["category"] == "media_event"
+
     def test_subcategory_event(self):
         r = classify(_profile(bio="Surf tournament"))
         assert r["subcategory"] == "event"

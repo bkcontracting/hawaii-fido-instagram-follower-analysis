@@ -18,7 +18,7 @@ def run_phase1(csv_path, db_path):
 def run_phase2(db_path, fetcher_fn):
     """Run enrichment on all pending followers.
 
-    Returns {batches_run, total_completed, total_errors, stopped}.
+    Returns {batches_run, total_completed, total_errors, stopped, reason}.
     """
     result = run_all(db_path, fetcher_fn)
     return {
@@ -26,4 +26,5 @@ def run_phase2(db_path, fetcher_fn):
         "total_completed": result["total_completed"],
         "total_errors": result["total_errors"],
         "stopped": result["stopped"],
+        "reason": result["reason"],
     }
