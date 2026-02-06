@@ -1,2 +1,3 @@
 .DS_Store
 data/followers_validated.csv
+data/followers.db
