@@ -6,7 +6,7 @@ import importlib
 def test_default_batch_size():
     import src.config as config
     importlib.reload(config)
-    assert config.BATCH_SIZE == 20
+    assert config.BATCH_SIZE == 5
 
 
 def test_default_max_subagents():

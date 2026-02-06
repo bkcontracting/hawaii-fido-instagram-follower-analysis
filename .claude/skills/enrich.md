@@ -8,9 +8,24 @@ Run `/enrich` or point Claude at this file. It will check DB status and resume f
 
 ## Architecture
 - Main orchestrator runs a thin loop: check DB → launch 2 subagents → wait → repeat
-- Each subagent processes exactly 1 batch (20 profiles) then terminates
+- Each subagent processes exactly 1 batch (5 profiles) then terminates
 - All state lives in SQLite — recovery is automatic
 - Exactly 2 browser tabs created at startup, navigated in-place (never create new tabs during processing)
+
+## Token Optimization — Why Batch Size 5
+Claude Code subagents send full conversation history on every turn, so context
+grows quadratically with profiles processed. Smaller batches keep each subagent's
+context window short and discard accumulated page data between launches.
+
+| Batch | Est. input tokens per 20 profiles | Relative cost |
+|-------|-----------------------------------|---------------|
+| 20    | ~1.76M                            | 1.0x (baseline) |
+| 10    | ~920K                             | 0.52x         |
+| **5** | **~560K**                         | **0.32x**     |
+| 1     | ~340K + high startup overhead     | ~0.25x        |
+
+Batch size 5 is the sweet spot: ~3x cheaper than 20, without the excessive
+subagent-launch overhead of batch size 1. Override via `BATCH_SIZE` env var.
 
 ## Main Orchestrator Loop
 
