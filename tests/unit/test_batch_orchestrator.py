@@ -163,6 +163,23 @@ class TestProcessBatch:
         assert dict(row)["error_message"] is not None
         assert "Failed to fetch" in dict(row)["error_message"]
 
+    def test_private_account_gets_private_status(self, tmp_path):
+        """Private accounts should get status='private' per PRD."""
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def private_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "is_private": True}
+
+        result = process_batch(db, batch, private_fetcher)
+        assert result["completed"] == 1
+        from src.database import _connect
+        conn = _connect(db)
+        row = conn.execute("SELECT * FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        assert dict(row)["status"] == "private"
+        assert dict(row)["is_private"] == 1
+
 
 # ── 6.3 run_with_retries ──────────────────────────────────────────
 class TestRunWithRetries:

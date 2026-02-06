@@ -19,6 +19,10 @@ def create_batch(db_path):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
+    # Use BEGIN IMMEDIATE to acquire a write lock before reading,
+    # preventing two concurrent subagents from claiming the same batch.
+    conn.execute("BEGIN IMMEDIATE")
+
     # Crash recovery: reset stale processing records
     cutoff = (datetime.datetime.now() - datetime.timedelta(minutes=5)).isoformat()
     conn.execute(
@@ -26,7 +30,6 @@ def create_batch(db_path):
         "WHERE status = 'processing' AND processed_at < ?",
         (cutoff,)
     )
-    conn.commit()
 
     # Claim pending records atomically
     batch_size = config.BATCH_SIZE
@@ -46,8 +49,8 @@ def create_batch(db_path):
             f"WHERE handle IN ({placeholders})",
             [now] + handles,
         )
-        conn.commit()
 
+    conn.commit()
     conn.close()
     return batch
 
@@ -98,7 +101,7 @@ def process_batch(db_path, batch, fetcher_fn):
                 "location": "Hawaii" if hi else None,
                 "priority_score": scoring["priority_score"],
                 "priority_reason": scoring["priority_reason"],
-                "status": "completed",
+                "status": "private" if enriched.get("is_private") else "completed",
                 "processed_at": datetime.datetime.now().isoformat(),
             }
             update_follower(db_path, handle, update_data)

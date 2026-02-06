@@ -4,6 +4,8 @@ Extracts structured profile data from raw page text (accessibility tree
 or DOM innerText) so the browser subagent only needs to grab text, not
 reason about parsing. Saves ~500-1000 tokens per profile in LLM context.
 """
+from __future__ import annotations
+
 import re
 
 

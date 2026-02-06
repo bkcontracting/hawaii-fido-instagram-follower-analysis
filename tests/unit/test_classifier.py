@@ -239,6 +239,10 @@ class TestRule7BusinessLocal:
         r = classify(_profile(bio="Real estate agent", is_business=True, is_hawaii=True))
         assert r["subcategory"] == "real_estate"
 
+    def test_subcategory_service(self):
+        r = classify(_profile(bio="Professional plumbing service", is_business=True, is_hawaii=True))
+        assert r["subcategory"] == "service"
+
 
 # ── Rule 8: business_national ─────────────────────────────────────
 class TestRule8BusinessNational:

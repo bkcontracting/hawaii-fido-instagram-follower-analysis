@@ -87,7 +87,7 @@ Page state is detected automatically by `parse_profile_page()`:
 - `page_state == "suspended"`: status='error', error_message='suspended'
 - `page_state == "rate_limited"`: stop batch, return rate_limited=true
 - `page_state == "login_required"`: stop batch, return rate_limited=true
-- `page_state == "normal"` + is_private=True: status='completed'
+- `page_state == "normal"` + is_private=True: status='private' (enriched data captured)
 - Page timeout: retry once, then status='error'
 
 ## Key Files

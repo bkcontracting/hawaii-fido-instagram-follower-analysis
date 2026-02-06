@@ -96,6 +96,8 @@ def _business_subcategory(text):
         return "real_estate"
     if "retail" in text or "boutique" in text or "shop" in text:
         return "retail"
+    if "service" in text or "salon" in text or "plumb" in text:
+        return "service"
     return "general"
 
 

@@ -39,8 +39,8 @@ _STRONG_STATE_SIGNALS = [
     (re.compile(r"\bhawai['\u02BB]i\b", re.IGNORECASE), _STRONG_WEIGHT),
     # bare "hawaii" — but NOT "hawaiian" (negative lookahead)
     (re.compile(r'\bhawaii\b(?!an)', re.IGNORECASE), _STRONG_WEIGHT),
-    # "HI" as a state abbreviation — word-boundary guarded
-    (re.compile(r'\bhi\b', re.IGNORECASE), _STRONG_WEIGHT),
+    # "HI" as a state abbreviation — uppercase only to avoid matching "hi" greeting
+    (re.compile(r'\bHI\b'), _STRONG_WEIGHT),
     # area code
     (re.compile(r'\b808\b'), _STRONG_WEIGHT),
 ]

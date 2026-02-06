@@ -338,7 +338,7 @@ All pipeline settings live in `src/config.py` with environment variable override
 
 | Setting | Default | Env Override | Purpose |
 |---------|---------|-------------|---------|
-| `BATCH_SIZE` | 20 | `BATCH_SIZE` | Profiles per batch |
+| `BATCH_SIZE` | 5 | `BATCH_SIZE` | Profiles per batch  |
 | `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` | Concurrent browser agents |
 | `MAX_RETRIES` | 3 | `MAX_RETRIES` | Total attempts per batch (including initial) |
 
@@ -350,7 +350,7 @@ The system is designed for **cross-session resumability**:
 
 | Feature | Implementation |
 |---------|---------------|
-| Batch size | 20 profiles per batch (~10 min) |
+| Batch size | 5 profiles per batch (optimized for token cost) |
 | State storage | SQLite (truth) |
 | Crash recovery | 'processing' records >5 min auto-reset to 'pending' |
 | Session handoff | New Claude session auto-detects and resumes |

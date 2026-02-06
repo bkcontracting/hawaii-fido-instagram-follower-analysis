@@ -199,12 +199,29 @@ def test_confidence_hi_not_in_high():
 
 
 def test_confidence_hi_standalone():
-    """Standalone 'HI' at end should match."""
+    """Standalone uppercase 'HI' at end should match."""
     assert hawaii_confidence("Based in HI") == 0.4
 
 
 def test_confidence_hi_with_comma():
     assert hawaii_confidence("Honolulu, HI") >= 0.4
+
+
+# ── hawaii_confidence: "hi" greeting should NOT match ────────────────
+
+def test_confidence_hi_greeting_false():
+    """Lowercase 'hi' as greeting should NOT match as Hawaii state code."""
+    assert hawaii_confidence("Hi everyone!") == 0.0
+
+
+def test_confidence_hi_say_false():
+    """'say hi' should NOT match as Hawaii state code."""
+    assert hawaii_confidence("Say hi") == 0.0
+
+
+def test_confidence_hi_greeting_mixed_case_false():
+    """Title-case 'Hi' should NOT match as Hawaii state code."""
+    assert hawaii_confidence("Hi there, welcome to my page") == 0.0
 
 
 # ── hawaii_confidence: word boundary for "808" ─────────────────────
