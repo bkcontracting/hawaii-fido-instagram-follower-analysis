@@ -2,3 +2,5 @@ __pycache__/
 .DS_Store
 data/followers_validated.csv
 data/followers.db
+data/followers.db-shm
+data/followers.db-wal
