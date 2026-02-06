@@ -28,6 +28,7 @@ Query `data/followers.db` for outreach candidates, grouped by tier.
 | priority_score | `priority_score` |
 | bio | `SUBSTR(bio, 1, 80)` (truncated) |
 | website | `website` |
+| is_hawaii | `is_hawaii` |
 | profile_url | `profile_url` |
 
 ## Instructions
@@ -45,7 +46,7 @@ Query `data/followers.db` for outreach candidates, grouped by tier.
 ## Example SQL
 ```sql
 SELECT handle, display_name, category, priority_score,
-  SUBSTR(bio, 1, 80) as bio, website, profile_url,
+  SUBSTR(bio, 1, 80) as bio, website, is_hawaii, profile_url,
   CASE WHEN priority_score >= 80 THEN 1
        WHEN priority_score >= 60 THEN 2
        WHEN priority_score >= 40 THEN 3

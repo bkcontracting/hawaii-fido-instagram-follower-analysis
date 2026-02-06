@@ -27,6 +27,8 @@ Query `data/followers.db` for potential donors and financial partners.
 | priority_score | `priority_score` |
 | bio | `SUBSTR(bio, 1, 80)` (truncated to 80 chars) |
 | website | `website` |
+| is_hawaii | `is_hawaii` |
+| profile_url | `profile_url` |
 
 ## Instructions
 1. Connect to `data/followers.db` using the Bash tool with `sqlite3`
@@ -38,7 +40,7 @@ Query `data/followers.db` for potential donors and financial partners.
 ## Example SQL
 ```sql
 SELECT handle, display_name, category, subcategory, priority_score,
-  SUBSTR(bio, 1, 80) as bio, website
+  SUBSTR(bio, 1, 80) as bio, website, is_hawaii, profile_url
 FROM followers
 WHERE status = 'completed'
   AND category IN ('bank_financial', 'business_local', 'organization')

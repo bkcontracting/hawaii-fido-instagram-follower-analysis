@@ -27,7 +27,12 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
    - Current config: batch size (`src/config.py` BATCH_SIZE, default 20), max retries (`src/config.py` MAX_RETRIES, default 3)
    - Estimated batches: ceil(followers_to_enrich / BATCH_SIZE)
 
-4. **Process followers in batches** — For each batch:
+4. **Browser setup (once)** — Before processing any batches:
+   - Call `mcp__claude-in-chrome__tabs_context_mcp` once to get current tab context
+   - Call `mcp__claude-in-chrome__tabs_create_mcp` once to create a single browser tab
+   - Store the returned tab ID — reuse it for ALL follower profile visits
+
+5. **Process followers in batches** — For each batch:
 
    a. **Claim batch** — Query up to BATCH_SIZE pending followers:
       ```sql
@@ -43,8 +48,7 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
 
       **Step 1 — Visit profile via Claude-in-Chrome MCP:**
       Use the Claude-in-Chrome MCP browser tools (`mcp__claude-in-chrome__navigate`, `mcp__claude-in-chrome__read_page`, `mcp__claude-in-chrome__computer`, etc.) to operate the user's actual Chrome browser (which has their Instagram session):
-      - Get tab context first with `mcp__claude-in-chrome__tabs_context_mcp`, then create a tab with `mcp__claude-in-chrome__tabs_create_mcp`
-      - Navigate to the follower's `profile_url` (e.g., `https://www.instagram.com/<handle>/`)
+      - Navigate to the follower's `profile_url` (e.g., `https://www.instagram.com/<handle>/`) using the tab ID from step 4
       - Wait for the page to load (wait for the profile header or username text to appear)
       - Read the page with `mcp__claude-in-chrome__read_page` to extract structured data
 
@@ -64,38 +68,19 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
 
       ```bash
       python3 -c "
-      import json
+      import sys, json
       from src.location_detector import is_hawaii
       from src.classifier import classify
       from src.scorer import score
 
-      # Data extracted from browser (fill in actual values)
-      handle = '<handle>'
-      display_name = '<display_name>'
-      bio = '<bio>'
-      combined_text = f'{handle} {display_name} {bio}'
-
+      data = json.load(sys.stdin)
+      combined_text = f\"{data['handle']} {data['display_name']} {data['bio']}\"
       hawaii = is_hawaii(combined_text)
-
-      profile = {
-          'handle': handle,
-          'display_name': display_name,
-          'bio': bio,
-          'website': '<website>',
-          'follower_count': <follower_count>,
-          'following_count': <following_count>,
-          'post_count': <post_count>,
-          'is_verified': <is_verified>,
-          'is_private': <is_private>,
-          'is_business': <is_business>,
-          'is_hawaii': hawaii,
-      }
-
+      profile = {**data, 'is_hawaii': hawaii}
       classification = classify(profile)
       profile['category'] = classification['category']
       profile['subcategory'] = classification['subcategory']
       scoring = score(profile)
-
       result = {
           'is_hawaii': hawaii,
           'location': 'Hawaii' if hawaii else None,
@@ -106,34 +91,25 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
           'priority_reason': scoring['priority_reason'],
       }
       print(json.dumps(result))
-      "
+      " <<'PROFILE_EOF'
+      <JSON object with all extracted fields — Claude JSON-encodes all string values>
+      PROFILE_EOF
       ```
 
       **Step 4 — Persist to database:**
       Use the Bash tool to update the follower record:
       ```bash
       python3 -c "
+      import sys, json, datetime
       from src.database import update_follower
-      update_follower('data/followers.db', '<handle>', {
-          'follower_count': <follower_count>,
-          'following_count': <following_count>,
-          'post_count': <post_count>,
-          'bio': '<bio>',
-          'website': '<website>',
-          'is_verified': <is_verified>,
-          'is_private': <is_private>,
-          'is_business': <is_business>,
-          'category': '<category>',
-          'subcategory': '<subcategory>',
-          'confidence': <confidence>,
-          'is_hawaii': <is_hawaii>,
-          'location': '<location>',
-          'priority_score': <priority_score>,
-          'priority_reason': '<priority_reason>',
-          'status': 'completed',
-          'processed_at': __import__('datetime').datetime.now().isoformat(),
-      })
-      "
+      data = json.load(sys.stdin)
+      handle = data.pop('handle')
+      data['status'] = 'completed'
+      data['processed_at'] = datetime.datetime.now().isoformat()
+      update_follower('data/followers.db', handle, data)
+      " <<'UPDATE_EOF'
+      <JSON object with handle + all fields from Step 3 result + extracted fields — Claude JSON-encodes all string values>
+      UPDATE_EOF
       ```
 
       **On error:** Set `status = 'error'` with the error message, then continue to the next follower.
@@ -146,7 +122,7 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
 
    f. **If user specified N** — After enriching N followers, stop (even if more are pending).
 
-5. **Show progress after each batch** — Display:
+6. **Show progress after each batch** — Display:
    ```
    Follower Enrichment Progress
    ============================
@@ -157,17 +133,23 @@ Run the Phase 2 enrichment pipeline on followers in `data/followers.db`. Each pe
    Errors: <errors>
    ```
 
-6. **Final report** — When done, show the final status breakdown and a summary:
+7. **Final report** — When done, show the final status breakdown and a summary:
    - Total enriched this session
    - Total errors
    - Whether all followers are now complete or some remain pending
+
+## Instagram Error Scenarios
+
+- **Login prompt ("Log in to continue"):** STOP immediately, report expired session to user, do NOT enter credentials.
+- **CAPTCHA / "Confirm it's you":** STOP immediately, report to user, wait for manual resolution before resuming.
+- **"Sorry, this page isn't available":** Mark as `status = 'error'` with `error_message = 'profile_not_found'`, continue to next follower. Do NOT retry — this is a permanent error.
 
 ## Important Notes
 
 - The user MUST be logged into Instagram in their browser before running this command
 - Respect rate limits: 3-5 second delays between profile visits
 - If rate limited by Instagram, pause for 5 minutes then resume
-- Private accounts: capture what limited data is visible, mark as `status = 'completed'` with `is_private = 1`
+- Private accounts: capture what limited data is visible, mark as `status = 'completed'` with `is_private = 1` (Note: PRD mentions `status = 'private'` but the code uses `status = 'completed'` — code is the source of truth.)
 - The database is the source of truth — if the session crashes, re-running `/enrich` will pick up where it left off (pending records resume automatically)
 - **Do NOT inline classification rules, scoring algorithms, or location detection logic** — always delegate to the Python modules in `src/`. This prevents drift between the skill and the source code.
 
