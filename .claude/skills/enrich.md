@@ -41,7 +41,7 @@ LOOP (repeat until no pending):
   6. Check DB counts
   7. Print progress: "Completed: X/830 | Pending: Y | Errors: Z"
   8. If pending == 0 → FINISH
-  9. Launch 2 Task subagents IN PARALLEL (general-purpose):
+  9. Launch 2 Task subagents IN PARALLEL (general-purpose, model: sonnet):
      - Agent 1: process 1 batch using tab1_id
      - Agent 2: process 1 batch using tab2_id
   10. Wait for both to return
