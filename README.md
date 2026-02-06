@@ -67,7 +67,7 @@ result = run_phase2("data/followers.db", fetcher_fn)
 # {'batches_run': 42, 'total_completed': 822, 'total_errors': 8}
 ```
 
-Requires a logged-in Instagram session via Claude-in-Chrome MCP. Processes in batches of 20 with 3–5 second delays between profile visits.
+Requires a logged-in Instagram session via Claude-in-Chrome MCP. Processes in batches of 5 with 3–5 second delays between profile visits.
 
 ### Phase 3 — Analyze with slash commands
 
@@ -112,7 +112,7 @@ Settings in `src/config.py` with env var overrides:
 
 | Setting | Default | Env Var |
 |---------|---------|---------|
-| `BATCH_SIZE` | 20 | `BATCH_SIZE` |
+| `BATCH_SIZE` | 5| `BATCH_SIZE` |
 | `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` |
 | `MAX_RETRIES` | 3 | `MAX_RETRIES` |
 

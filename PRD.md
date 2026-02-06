@@ -418,7 +418,7 @@ Estimated time remaining: ~45 minutes
 
 ### `src/config.py`
 ```python
-BATCH_SIZE: int     # default 20, env override BATCH_SIZE
+BATCH_SIZE: int     # default 5, env override BATCH_SIZE
 MAX_SUBAGENTS: int  # default 2, env override MAX_SUBAGENTS
 MAX_RETRIES: int    # default 3, env override MAX_RETRIES
 ```
