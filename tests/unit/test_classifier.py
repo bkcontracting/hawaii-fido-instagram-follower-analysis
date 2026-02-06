@@ -97,6 +97,22 @@ class TestRule2PetIndustry:
         r = classify(_profile(bio="Organic pet food", is_business=True))
         assert r["subcategory"] == "pet_food"
 
+    def test_pet_keyword_with_community_not_commercial(self):
+        r = classify(_profile(bio="Pet lover in the community garden", is_business=False))
+        assert r["category"] != "pet_industry"
+
+    def test_pet_keyword_with_coffee_not_commercial(self):
+        r = classify(_profile(bio="Pet stories and coffee chats", is_business=False))
+        assert r["category"] != "pet_industry"
+
+    def test_pet_keyword_with_welcome_not_commercial(self):
+        r = classify(_profile(bio="Pet tips welcome everyone", is_business=False))
+        assert r["category"] != "pet_industry"
+
+    def test_pet_keyword_with_inc_is_commercial(self):
+        r = classify(_profile(bio="Island Pet Inc", is_business=False))
+        assert r["category"] == "pet_industry"
+
 
 # ── Rule 3: organization ──────────────────────────────────────────
 class TestRule3Organization:

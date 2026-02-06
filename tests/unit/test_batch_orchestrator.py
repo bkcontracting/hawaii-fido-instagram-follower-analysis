@@ -180,6 +180,82 @@ class TestProcessBatch:
         assert dict(row)["status"] == "private"
         assert dict(row)["is_private"] == 1
 
+    def test_not_found_page_state_marks_error(self, tmp_path):
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def not_found_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "not_found"}
+
+        result = process_batch(db, batch, not_found_fetcher)
+        assert result["completed"] == 0
+        assert result["errors"] == 1
+
+        from src.database import _connect
+        conn = _connect(db)
+        row = conn.execute("SELECT status, error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        row_dict = dict(row)
+        assert row_dict["status"] == "error"
+        assert row_dict["error_message"] == "not_found"
+
+    def test_suspended_page_state_marks_error(self, tmp_path):
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def suspended_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "suspended"}
+
+        result = process_batch(db, batch, suspended_fetcher)
+        assert result["completed"] == 0
+        assert result["errors"] == 1
+
+        from src.database import _connect
+        conn = _connect(db)
+        row = conn.execute("SELECT status, error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        row_dict = dict(row)
+        assert row_dict["status"] == "error"
+        assert row_dict["error_message"] == "suspended"
+
+    def test_rate_limited_page_state_not_completed(self, tmp_path):
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def rate_limited_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "rate_limited"}
+
+        result = process_batch(db, batch, rate_limited_fetcher)
+        assert result["completed"] == 0
+        assert result["errors"] == 1
+
+        from src.database import _connect
+        conn = _connect(db)
+        row = conn.execute("SELECT status, error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        row_dict = dict(row)
+        assert row_dict["status"] == "error"
+        assert row_dict["error_message"] == "rate_limited"
+
+    def test_login_required_page_state_not_completed(self, tmp_path):
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def login_required_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "login_required"}
+
+        result = process_batch(db, batch, login_required_fetcher)
+        assert result["completed"] == 0
+        assert result["errors"] == 1
+
+        from src.database import _connect
+        conn = _connect(db)
+        row = conn.execute("SELECT status, error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        row_dict = dict(row)
+        assert row_dict["status"] == "error"
+        assert row_dict["error_message"] == "login_required"
+
 
 # ── 6.3 run_with_retries ──────────────────────────────────────────
 class TestRunWithRetries:

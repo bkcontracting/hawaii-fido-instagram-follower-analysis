@@ -71,6 +71,23 @@ def process_batch(db_path, batch, fetcher_fn):
 
         try:
             enriched = fetcher_fn(handle, profile_url)
+            page_state = (enriched.get("page_state") or "normal").lower()
+
+            if page_state in {"not_found", "suspended"}:
+                update_follower(db_path, handle, {
+                    "status": "error",
+                    "error_message": page_state,
+                    "processed_at": datetime.datetime.now().isoformat(),
+                })
+                errors += 1
+                continue
+
+            if page_state in {"rate_limited", "login_required"}:
+                # Propagate through the standard error path so retry/stop logic applies.
+                raise RuntimeError(page_state)
+
+            if page_state != "normal":
+                raise RuntimeError(f"unknown_page_state:{page_state}")
 
             bio = enriched.get("bio") or ""
             combined_text = f"{handle} {display_name} {bio}"

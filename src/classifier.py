@@ -1,4 +1,5 @@
 """Classify Instagram profiles into categories using 13 priority-ordered rules."""
+import re
 
 
 # ── Keyword lists ──────────────────────────────────────────────────
@@ -8,7 +9,19 @@ _PET_KEYWORDS = [
     "pet supply", "dog gym",
 ]
 
-_COMMERCIAL_SIGNALS = ["shop", "store", "service", "clinic", "supply", "co", "inc"]
+# Commercial markers for Rule 2 (pet_industry fallback when is_business=False).
+# Use boundary-aware matching to avoid substring false positives such as
+# "community", "coffee", and "welcome".
+_COMMERCIAL_SIGNAL_PATTERNS = [
+    re.compile(r"\bshop\b"),
+    re.compile(r"\bstore\b"),
+    re.compile(r"\bservice\b"),
+    re.compile(r"\bclinic\b"),
+    re.compile(r"\bsupply\b"),
+    re.compile(r"\binc\b"),
+    re.compile(r"\bllc\b"),
+    re.compile(r"\bco\b\.?"),
+]
 
 _CHARITY_KEYWORDS = ["rescue", "humane", "nonprofit", "501c", "shelter", "charity"]
 
@@ -39,7 +52,7 @@ def _has_any(text, keywords):
 
 def _has_commercial_signal(text):
     """Return True if text contains a commercial signal."""
-    return _has_any(text, _COMMERCIAL_SIGNALS)
+    return any(pattern.search(text) for pattern in _COMMERCIAL_SIGNAL_PATTERNS)
 
 
 # ── Subcategory detection ──────────────────────────────────────────
