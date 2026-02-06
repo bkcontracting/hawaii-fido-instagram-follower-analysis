@@ -56,31 +56,42 @@ FINISH:
 
 ## Subagent Prompt Template
 
-Each subagent receives the tab_id and processes one batch:
+Each subagent receives the tab_id and processes one batch.
+IMPORTANT: Keep responses minimal. Do not echo extracted data or explain
+reasoning. Just call Python functions and return the final count.
 
 1. Claim batch via `create_batch("data/followers.db")`
 2. For each follower in batch:
    a. Navigate to profile_url in the assigned tab
    b. Wait 2s for page load
-   c. Extract: follower_count, following_count, post_count, bio, website, is_verified, is_private, is_business
-   d. Parse K/M suffixes: "1.2K"→1200, "5M"→5000000
-   e. Run through pipeline: is_hawaii() → classify() → score() → update_follower()
-   f. Random delay 3-5s before next profile
-3. Return: "{completed: N, errors: M, rate_limited: bool}"
+   c. Grab raw page text via `javascript_tool(tabId)`:
+      `document.querySelector('header')?.closest('main')?.innerText || document.body.innerText`
+   d. Pass raw text to deterministic parser — DO NOT parse counts yourself:
+      `from src.profile_parser import parse_profile_page`
+      `enriched = parse_profile_page(raw_text)`
+   e. Check `enriched["page_state"]`: if "rate_limited" → stop and return
+   f. Run through pipeline: is_hawaii() → classify() → score() → update_follower()
+   g. Random delay 3-5s before next profile
+3. Return ONLY: "{completed: N, errors: M, rate_limited: bool}"
 
 ## Extraction Method
-- Primary: `read_page(tabId)` accessibility tree → parse structured text
-- Fallback: `javascript_tool(tabId)` for DOM queries
-- Handle: private accounts, not found, suspended, rate limiting
+- Primary: `javascript_tool(tabId)` → grab innerText → `parse_profile_page(text)`
+- Fallback: `read_page(tabId)` accessibility tree → `parse_profile_page(text)`
+- NEVER parse counts, detect page state, or extract fields manually — always
+  use `parse_profile_page()` which handles K/M suffixes, page states, and all
+  field extraction deterministically
 
 ## Error Handling
-- Profile not found: status='error', error_message='not_found'
-- Account suspended: status='error', error_message='suspended'
-- Private account: extract visible data, is_private=True, status='completed'
-- Rate limited: stop batch, return rate_limited=true to orchestrator
+Page state is detected automatically by `parse_profile_page()`:
+- `page_state == "not_found"`: status='error', error_message='not_found'
+- `page_state == "suspended"`: status='error', error_message='suspended'
+- `page_state == "rate_limited"`: stop batch, return rate_limited=true
+- `page_state == "login_required"`: stop batch, return rate_limited=true
+- `page_state == "normal"` + is_private=True: status='completed'
 - Page timeout: retry once, then status='error'
 
 ## Key Files
+- `src/profile_parser.py` — **deterministic page parser** (parse_count, parse_profile_page, detect_page_state)
 - `src/batch_orchestrator.py` — create_batch() with crash recovery
 - `src/classifier.py` — 13-rule classification
 - `src/scorer.py` — priority scoring 0-100
