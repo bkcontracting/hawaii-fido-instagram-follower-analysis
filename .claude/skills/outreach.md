@@ -16,6 +16,8 @@ Query `data/followers.db` for outreach candidates, grouped by tier.
 ## Optional Filters (from user arguments)
 - `--category <value>` — filter by category
 - `--tier <N>` — show only tier N (1, 2, 3, or 4)
+- `--hawaii` — only show `is_hawaii = 1`
+- `--limit <N>` — override row limit (default 20)
 
 ## Output Columns
 | Column | Source |
@@ -35,6 +37,7 @@ Query `data/followers.db` for outreach candidates, grouped by tier.
    - **Tier 1 — High Priority (80-100)**
    - **Tier 2 — Medium Priority (60-79)**
    - **Tier 3 — Low Priority (40-59)**
+   - **Tier 4 — Skip (0-39)** (only shown when `--tier 4` is explicitly requested)
 4. Format each group as a markdown table
 5. Show total at the bottom: "Showing X outreach candidates across Y tiers"
 6. If no results, say "No outreach candidates found matching the criteria."

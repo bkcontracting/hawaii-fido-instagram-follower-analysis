@@ -53,10 +53,14 @@ ORDER BY priority_score DESC LIMIT 10;
 ```
 
 ### 6. Top 10 Per Category
-For each category with completed records:
+First, get the distinct categories:
+```sql
+SELECT DISTINCT category FROM followers WHERE status = 'completed' ORDER BY category;
+```
+Then, for each category returned, run:
 ```sql
 SELECT handle, display_name, priority_score
-FROM followers WHERE status = 'completed' AND category = ?
+FROM followers WHERE status = 'completed' AND category = '<category>'
 ORDER BY priority_score DESC LIMIT 10;
 ```
 
@@ -64,8 +68,10 @@ ORDER BY priority_score DESC LIMIT 10;
 ```sql
 SELECT handle, display_name, category, status, error_message
 FROM followers WHERE category = 'unknown' OR status = 'error'
-ORDER BY status, handle;
+ORDER BY status, handle
+LIMIT 50;
 ```
+If more than 50 rows exist, note the total count and suggest using `/prospects --category unknown` or filtering the database directly.
 
 ## Instructions
 1. Connect to `data/followers.db` using the Bash tool with `sqlite3`

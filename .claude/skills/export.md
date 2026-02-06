@@ -41,9 +41,22 @@ ORDER BY priority_score DESC;
 
 ### `full_export.csv`
 - Filter: all followers
-- Sort: `priority_score DESC NULLS LAST`
+- Sort: `priority_score DESC` (NULLs last)
 - Columns: `handle, display_name, category, subcategory, priority_score, tier, priority_reason, follower_count, following_count, post_count, bio, website, is_verified, is_private, is_business, is_hawaii, location, confidence, status, profile_url`
 - If no data: write header row only
+
+```sql
+SELECT handle, display_name, category, subcategory, priority_score,
+  CASE WHEN priority_score >= 80 THEN 'Tier 1 - High Priority'
+       WHEN priority_score >= 60 THEN 'Tier 2 - Medium Priority'
+       WHEN priority_score >= 40 THEN 'Tier 3 - Low Priority'
+       ELSE 'Tier 4 - Skip' END AS tier,
+  priority_reason, follower_count, following_count, post_count,
+  bio, website, is_verified, is_private, is_business,
+  is_hawaii, location, confidence, status, profile_url
+FROM followers
+ORDER BY priority_score IS NULL, priority_score DESC;
+```
 
 ### `analysis_summary.md`
 Include sections:

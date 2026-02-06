@@ -14,6 +14,8 @@ Query `data/followers.db` for potential donors and financial partners.
 ## Optional Filters (from user arguments)
 - `--hawaii` — only show `is_hawaii = 1`
 - `--min-score <N>` — override minimum score (default 50)
+- `--category <value>` — filter to a single donor category (e.g., `bank_financial`, `business_local`, `organization`)
+- `--limit <N>` — limit number of rows returned (default: no limit)
 
 ## Output Columns
 | Column | Source |
@@ -41,5 +43,7 @@ FROM followers
 WHERE status = 'completed'
   AND category IN ('bank_financial', 'business_local', 'organization')
   AND priority_score >= 50
-ORDER BY priority_score DESC;
+ORDER BY priority_score DESC
+-- Add LIMIT N if --limit is provided
+;
 ```
