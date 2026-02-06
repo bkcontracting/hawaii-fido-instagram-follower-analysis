@@ -340,7 +340,7 @@ All pipeline settings live in `src/config.py` with environment variable override
 |---------|---------|-------------|---------|
 | `BATCH_SIZE` | 20 | `BATCH_SIZE` | Profiles per batch |
 | `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` | Concurrent browser agents |
-| `MAX_RETRIES` | 3 | `MAX_RETRIES` | Retry attempts per batch |
+| `MAX_RETRIES` | 3 | `MAX_RETRIES` | Total attempts per batch (including initial) |
 
 No external dependencies beyond stdlib for the config module.
 
@@ -460,7 +460,7 @@ get_status_counts(db_path: str) -> dict
 ### `src/location_detector.py`
 ```python
 is_hawaii(text: str) -> bool
-# Returns True if any Hawaii signal matches. Safe on None/empty.
+# Returns True if hawaii_confidence(text) >= 0.4. Safe on None/empty.
 
 hawaii_confidence(text: str) -> float
 # Returns 0.0–1.0 weighted confidence score. See Location Confidence Scoring.
@@ -640,7 +640,7 @@ All fixtures live in `tests/fixtures/` and must be created before module impleme
 
 | Handle | Category | Key Fields |
 |--------|----------|-----------|
-| (business) | `business_local` | `is_hawaii=True`, `is_business=True`, bio "Pet supplies in Kailua" |
+| (business) | `business_local` | `is_hawaii=True`, `is_business=True`, bio "Coffee roasters in Kailua" |
 | (organization) | `organization` | `is_hawaii=True`, bio "Rotary Club of Honolulu" |
 | (personal) | `influencer` | `follower_count >= 10000` |
 | (unicode) | `personal_engaged` | `post_count > 50` |
