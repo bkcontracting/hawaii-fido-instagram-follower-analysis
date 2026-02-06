@@ -96,7 +96,7 @@ Phase 3 replaces static file generation with **5 Claude Code slash commands** th
   - Category breakdown (count + avg score per category)
   - Tier distribution
   - Top 10 overall
-  - Top 5 per category
+  - Top 10 per category
   - "Needs Review" list (unknown + error accounts)
 
 #### `/donors` — Financial Resource Targets
@@ -105,7 +105,7 @@ Phase 3 replaces static file generation with **5 Claude Code slash commands** th
 - **Columns:** handle, display_name, category, subcategory, priority_score, bio (truncated 80 chars), website
 
 #### `/outreach` — Actionable Contact List
-- **Default:** Top 20 prospects grouped by tier
+- **Default:** score >= 40, sorted by priority_score desc, grouped by tier, limit 20
 - **Filters:** `--category`, `--tier`
 - **Columns:** handle, display_name, category, priority_score, bio (truncated), website, profile_url
 
@@ -150,7 +150,7 @@ followers (
   is_hawaii       BOOLEAN,            -- Hawaii-based indicator
   confidence      REAL,               -- Classification confidence 0-1
 
-  -- Scoring (Phase 3)
+  -- Scoring (Phase 2)
   priority_score  REAL,               -- Final ranking score
   priority_reason TEXT,               -- Why this score
 
@@ -162,12 +162,14 @@ followers (
 )
 ```
 
+> **Note:** `tier` is not stored in the database. Slash commands and exports derive it from `priority_score` using `get_tier()` logic or equivalent SQL CASE WHEN expressions.
+
 ### Classification Categories
 
 | Category | Description | Priority |
 |----------|-------------|----------|
 | `business_local` | Hawaii-based business | HIGH |
-| `organization` | rotary club, member club (golf, elks, etc) Church, school, community group | HIGH |
+| `organization` | rotary club, member club (golf, elks, etc), church, school, community group | HIGH |
 | `bank_financial` | Banks, financial services | HIGH |
 | `pet_industry` | Pet/animal businesses: vets, trainers, pet stores, groomers, pet food, dog services. Commercial only — nonprofits stay as `charity`. | HIGH |
 | `influencer` | High follower count (10k+) | HIGH |
@@ -201,9 +203,9 @@ Rules are evaluated in priority order — first match wins. All keyword checks s
 1.  bio/handle/name contains "bank" or "financial" or "credit union"       → bank_financial
 2.  bio/handle/name contains pet industry keywords¹
     AND (is_business=True OR commercial signal²)                           → pet_industry
-3.  bio contains "church","school","rotary","club","golf"
+3.  bio/handle/name contains "church","school","rotary","club","golf"
     AND NOT charity keywords                                               → organization
-4.  bio contains "rescue","humane","nonprofit","501c","shelter","charity"  → charity
+4.  bio/handle/name contains "rescue","humane","nonprofit","501c","shelter","charity"  → charity
 5.  bio/handle/name contains "council","mayor","senator","representative",
     "governor" AND is_hawaii=True                                          → elected_official
 6.  bio/handle/name contains "event","tournament","open","festival",
@@ -240,7 +242,7 @@ Look for these Hawaii indicators in bio/name/handle:
 - Area code: 808
 - Airport code: HNL
 - Zip prefix: 967, 968
-- Phrases: "Aloha", "808 state", "Hawaiian"
+- Phrases: "Aloha", "Hawaiian"
 
 ### Location Confidence Scoring
 
@@ -359,7 +361,7 @@ To avoid Instagram detection:
 1. **Delays:** 3-5 second random delay between profile visits
 2. **Parallelism:** Maximum 2 concurrent browser agents
 3. **Sessions:** Use logged-in Instagram session (user must be authenticated)
-5. **Backoff:** If rate limited, pause for 5 minutes then resume
+4. **Backoff:** If rate limited, pause for 5 minutes then resume
 
 ### Error Handling
 
@@ -369,7 +371,7 @@ To avoid Instagram detection:
 | Private account | Mark as `status=private`, capture limited data |
 | Rate limited | Pause 5 min, retry with longer delays |
 | Page timeout | Retry once, then mark error |
-| Browser crash | Resume from SQLLite (truth)|
+| Browser crash | Resume from SQLite (truth)|
 
 ---
 
@@ -381,7 +383,8 @@ Follower Enrichment Progress
 ============================
 Total: 830
 Completed: 415 (50%)
-Pending: 403
+Processing: 2
+Pending: 401
 Errors: 8
 Private: 4
 
@@ -415,7 +418,7 @@ Estimated time remaining: ~45 minutes
 
 ### `src/config.py`
 ```python
-BATCH_SIZE: int     # default 10, env override BATCH_SIZE
+BATCH_SIZE: int     # default 20, env override BATCH_SIZE
 MAX_SUBAGENTS: int  # default 2, env override MAX_SUBAGENTS
 MAX_RETRIES: int    # default 3, env override MAX_RETRIES
 ```
@@ -636,7 +639,7 @@ All fixtures live in `tests/fixtures/` and must be created before module impleme
 | Handle | Category | Key Fields |
 |--------|----------|-----------|
 | (business) | `business_local` | `is_hawaii=True`, `is_business=True`, bio "Pet supplies in Kailua" |
-| (org) | `charity` | bio with charity keywords |
+| (charity/nonprofit) | `charity` | bio with charity keywords |
 | (personal) | `influencer` | `follower_count >= 10000` |
 | (unicode) | `personal_engaged` | `post_count > 50` |
 | (website) | `spam_bot` | `following >> followers`, `post_count < 5` |
@@ -675,7 +678,7 @@ Each module lives in its own file. Import rules:
 - `database.py` — no imports from other `src/` modules
 - `location_detector.py` — no imports from other `src/` modules
 - `classifier.py` — imports `location_detector` only
-- `scorer.py` — imports `location_detector`, `classifier`
+- `scorer.py` — no imports from other `src/` modules
 - `batch_orchestrator.py` — imports `database`, `location_detector`, `classifier`, `scorer`, `config`
 - `pipeline.py` — imports all above
 
