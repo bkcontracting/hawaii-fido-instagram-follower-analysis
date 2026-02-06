@@ -1,0 +1,6 @@
+handle,display_name,profile_url,completeness_score,is_edge_case,edge_case_types,validation_notes
+aloha_coffee_co,Aloha Coffee Co,https://www.instagram.com/aloha_coffee_co/,1.0,FALSE,,clean record
+honolulu_rotary,Rotary Club of Honolulu,https://www.instagram.com/honolulu_rotary/,1.0,FALSE,,clean record
+jane_travels,Jane Doe,https://www.instagram.com/jane_travels/,1.0,FALSE,,clean record
+halekuike,Hale Kuʻike,https://www.instagram.com/halekuike/,1.0,FALSE,,clean record
+maui_photo_tours,Maui Photo Tours,https://www.instagram.com/maui_photo_tours/,0.8,FALSE,,clean record

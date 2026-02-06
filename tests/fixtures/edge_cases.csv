@@ -1,0 +1,7 @@
+handle,display_name,profile_url,completeness_score,is_edge_case,edge_case_types,validation_notes,extra_col
+dup_handle,First Entry,https://www.instagram.com/dup_handle/,1.0,FALSE,,clean record,extra
+dup_handle,Second Entry,https://www.instagram.com/dup_handle/,1.0,FALSE,,duplicate,extra
+  spaces_handle  , Spaced Name ,https://www.instagram.com/spaces_handle/,1.0,FALSE,,whitespace,extra
+empty_display,,https://www.instagram.com/empty_display/,1.0,TRUE,empty_display,no display name,extra
+unicode_test,Hale Kuʻike,https://www.instagram.com/unicode_test/,1.0,FALSE,,unicode,extra
+"quoted_handle","Name, With Comma",https://www.instagram.com/quoted_handle/,1.0,FALSE,,quoted fields,extra

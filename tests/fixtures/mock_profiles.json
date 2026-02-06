@@ -1,0 +1,52 @@
+{
+  "aloha_coffee_co": {
+    "follower_count": 2500,
+    "following_count": 800,
+    "post_count": 150,
+    "bio": "Coffee roasters in Kailua. Locally sourced, freshly roasted. ☕",
+    "website": "https://alohacoffee.com",
+    "is_verified": false,
+    "is_private": false,
+    "is_business": true
+  },
+  "honolulu_rotary": {
+    "follower_count": 1200,
+    "following_count": 300,
+    "post_count": 85,
+    "bio": "Rotary Club of Honolulu — Service Above Self. Community giving since 1915.",
+    "website": "https://honolulurotary.org",
+    "is_verified": false,
+    "is_private": false,
+    "is_business": false
+  },
+  "jane_travels": {
+    "follower_count": 15000,
+    "following_count": 500,
+    "post_count": 320,
+    "bio": "Travel blogger | 50 countries and counting ✈️",
+    "website": "https://janetravels.com",
+    "is_verified": true,
+    "is_private": false,
+    "is_business": false
+  },
+  "halekuike": {
+    "follower_count": 450,
+    "following_count": 200,
+    "post_count": 75,
+    "bio": "Sharing the spirit of aloha through art and culture 🌺",
+    "website": null,
+    "is_verified": false,
+    "is_private": false,
+    "is_business": false
+  },
+  "maui_photo_tours": {
+    "follower_count": 50,
+    "following_count": 5200,
+    "post_count": 2,
+    "bio": "",
+    "website": null,
+    "is_verified": false,
+    "is_private": false,
+    "is_business": false
+  }
+}
