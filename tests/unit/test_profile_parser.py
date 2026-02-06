@@ -14,32 +14,26 @@ class TestParseCount:
     def test_large_commas(self):
         assert parse_count("1,234,567") == 1234567
 
-    def test_k_suffix_rounds(self):
-        assert parse_count("1.2K") == 1000
+    def test_k_suffix(self):
+        assert parse_count("1.2K") == 1200
 
-    def test_k_lowercase_rounds(self):
-        assert parse_count("1.2k") == 1000
+    def test_k_lowercase(self):
+        assert parse_count("1.2k") == 1200
 
-    def test_k_rounds_up(self):
-        assert parse_count("1.5K") == 2000
+    def test_64_1k_preserves_precision(self):
+        assert parse_count("64.1K") == 64100
 
-    def test_64_1k_rounds_to_64k(self):
-        assert parse_count("64.1K") == 64000
-
-    def test_64_9k_rounds_to_65k(self):
-        assert parse_count("64.9K") == 65000
+    def test_k_whole_number(self):
+        assert parse_count("64K") == 64000
 
     def test_m_suffix(self):
         assert parse_count("5M") == 5000000
 
-    def test_m_decimal_rounds(self):
-        assert parse_count("2.5M") == 2000000  # banker's rounding: round(2.5) == 2
+    def test_m_decimal(self):
+        assert parse_count("2.5M") == 2500000
 
-    def test_m_rounds_up(self):
-        assert parse_count("2.7M") == 3000000
-
-    def test_m_decimal_rounds_down(self):
-        assert parse_count("2.3M") == 2000000
+    def test_m_decimal_small(self):
+        assert parse_count("2.3M") == 2300000
 
     def test_b_suffix(self):
         assert parse_count("1B") == 1000000000
@@ -57,13 +51,10 @@ class TestParseCount:
         assert parse_count("0") == 0
 
     def test_whitespace_stripped(self):
-        assert parse_count("  1.5K  ") == 2000
+        assert parse_count("  1.5K  ") == 1500
 
     def test_k_with_space(self):
         assert parse_count("10 K") == 10000
-
-    def test_whole_number_k_unchanged(self):
-        assert parse_count("64K") == 64000
 
 
 # ── detect_page_state ────────────────────────────────────────────────
@@ -113,7 +104,7 @@ class TestParseProfilePage:
 
     def test_follower_count(self):
         result = parse_profile_page(self.SAMPLE_PAGE)
-        assert result["follower_count"] == 1000
+        assert result["follower_count"] == 1200
 
     def test_following_count(self):
         result = parse_profile_page(self.SAMPLE_PAGE)
@@ -154,7 +145,7 @@ class TestParseProfilePage:
         text = "5,432 posts 2.5M followers 123 following"
         result = parse_profile_page(text)
         assert result["post_count"] == 5432
-        assert result["follower_count"] == 2000000
+        assert result["follower_count"] == 2500000
         assert result["following_count"] == 123
 
     def test_no_website(self):
