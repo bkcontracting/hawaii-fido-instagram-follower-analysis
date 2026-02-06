@@ -13,10 +13,14 @@ def parse_count(text: str) -> int | None:
     Handles suffixes: K (thousands), M (millions), B (billions).
     Handles commas in numbers: "1,234" → 1234.
 
+    Abbreviated counts are rounded to suffix-level granularity since
+    Instagram's displayed decimals are already approximations:
+    "64.1K" → 64000, "2.5M" → 3000000.
+
     Returns None if text is empty or unparseable.
 
-    >>> parse_count("1.2K")
-    1200
+    >>> parse_count("64.1K")
+    64000
     >>> parse_count("5M")
     5000000
     >>> parse_count("1,234")
@@ -34,7 +38,7 @@ def parse_count(text: str) -> int | None:
     if match:
         number = float(match.group(1))
         suffix = match.group(2).upper()
-        return int(number * multipliers[suffix])
+        return round(number) * multipliers[suffix]
 
     match = re.match(r"^(\d+)$", text)
     if match:
