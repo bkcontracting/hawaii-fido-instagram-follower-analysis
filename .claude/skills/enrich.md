@@ -48,7 +48,7 @@ Each subagent receives the tab_id and processes one batch:
    a. Navigate to profile_url in the assigned tab
    b. Wait 2s for page load
    c. Extract: follower_count, following_count, post_count, bio, website, is_verified, is_private, is_business
-   d. Parse K/M suffixes: "1.2K"→1200, "5M"→5000000
+   d. Parse K/M suffixes using float conversion: strip trailing "K"/"M", convert to float FIRST, then multiply. Examples: "64.1K"→float("64.1")*1000→64100, "1.2M"→float("1.2")*1000000→1200000, "5M"→5000000, "847"→847. Always use int(float(num_str) * multiplier) to preserve decimals.
    e. Run through pipeline: is_hawaii() → classify() → score() → update_follower()
    f. Random delay 3-5s before next profile
 3. Return: "{completed: N, errors: M, rate_limited: bool}"
