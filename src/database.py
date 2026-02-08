@@ -29,6 +29,14 @@ CREATE TABLE IF NOT EXISTS followers (
 )
 """
 
+_VALID_COLUMNS = {
+    "handle", "display_name", "profile_url", "follower_count",
+    "following_count", "post_count", "bio", "website", "is_verified",
+    "is_private", "is_business", "category", "subcategory", "location",
+    "is_hawaii", "confidence", "priority_score", "priority_reason",
+    "status", "error_message", "processed_at",
+}
+
 
 def _connect(db_path: str) -> sqlite3.Connection:
     """Open a connection with Row factory and WAL mode for concurrent access."""
@@ -41,9 +49,11 @@ def _connect(db_path: str) -> sqlite3.Connection:
 def init_db(db_path: str) -> None:
     """Create SQLite file and followers table. Idempotent."""
     conn = _connect(db_path)
-    conn.execute(_SCHEMA)
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute(_SCHEMA)
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def insert_followers(db_path: str, followers: list) -> int:
@@ -56,49 +66,60 @@ def insert_followers(db_path: str, followers: list) -> int:
         return 0
 
     conn = _connect(db_path)
-    inserted = 0
-    for f in followers:
-        cursor = conn.execute(
-            "INSERT OR IGNORE INTO followers (handle, display_name, profile_url, status) "
-            "VALUES (?, ?, ?, 'pending')",
-            (f["handle"], f["display_name"], f["profile_url"]),
-        )
-        inserted += cursor.rowcount
-    conn.commit()
-    conn.close()
-    return inserted
+    try:
+        inserted = 0
+        for f in followers:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO followers (handle, display_name, profile_url, status) "
+                "VALUES (?, ?, ?, 'pending')",
+                (f["handle"], f["display_name"], f["profile_url"]),
+            )
+            inserted += cursor.rowcount
+        conn.commit()
+        return inserted
+    finally:
+        conn.close()
 
 
 def get_pending(db_path: str, limit: int) -> list:
     """Return up to `limit` followers with status='pending' as list of dicts."""
     conn = _connect(db_path)
-    rows = conn.execute(
-        "SELECT * FROM followers WHERE status = 'pending' LIMIT ?", (limit,)
-    ).fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
+    try:
+        rows = conn.execute(
+            "SELECT * FROM followers WHERE status = 'pending' LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 
 def update_follower(db_path: str, handle: str, data: dict) -> None:
     """Update arbitrary fields on the row matching handle."""
     if not data:
         return
+    invalid = set(data) - _VALID_COLUMNS
+    if invalid:
+        raise ValueError(f"Invalid column(s): {invalid}")
     columns = ", ".join(f"{key} = ?" for key in data)
     values = list(data.values()) + [handle]
     conn = _connect(db_path)
-    conn.execute(
-        f"UPDATE followers SET {columns} WHERE handle = ?",
-        values,
-    )
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute(
+            f"UPDATE followers SET {columns} WHERE handle = ?",
+            values,
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_status_counts(db_path: str) -> dict:
     """Return {'pending': N, 'completed': N, 'error': N, ...} for all statuses present."""
     conn = _connect(db_path)
-    rows = conn.execute(
-        "SELECT status, COUNT(*) as cnt FROM followers GROUP BY status"
-    ).fetchall()
-    conn.close()
-    return {row["status"]: row["cnt"] for row in rows}
+    try:
+        rows = conn.execute(
+            "SELECT status, COUNT(*) as cnt FROM followers GROUP BY status"
+        ).fetchall()
+        return {row["status"]: row["cnt"] for row in rows}
+    finally:
+        conn.close()

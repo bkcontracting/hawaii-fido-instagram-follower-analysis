@@ -62,7 +62,7 @@ def detect_page_state(text: str) -> str:
         return "not_found"
     if "user not found" in lower:
         return "not_found"
-    if "account has been suspended" in lower or "suspended" in lower and "violat" in lower:
+    if ("account has been suspended" in lower) or ("suspended" in lower and "violat" in lower):
         return "suspended"
     if "try again later" in lower or "rate limit" in lower or "wait a few minutes" in lower:
         return "rate_limited"
@@ -96,8 +96,6 @@ def parse_profile_page(text: str) -> dict:
     }
 
     if page_state != "normal":
-        if page_state == "not_found":
-            result["is_private"] = False
         return result
 
     # Posts / Followers / Following pattern: "123 posts 1.2K followers 456 following"

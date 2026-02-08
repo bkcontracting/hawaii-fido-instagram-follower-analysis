@@ -3,7 +3,7 @@ import datetime
 import sqlite3
 
 from src import config
-from src.database import get_pending, update_follower, get_status_counts
+from src.database import update_follower
 from src.location_detector import is_hawaii
 from src.classifier import classify
 from src.scorer import score
@@ -19,40 +19,46 @@ def create_batch(db_path):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    # Use BEGIN IMMEDIATE to acquire a write lock before reading,
-    # preventing two concurrent subagents from claiming the same batch.
-    conn.execute("BEGIN IMMEDIATE")
+    try:
+        # Use BEGIN IMMEDIATE to acquire a write lock before reading,
+        # preventing two concurrent subagents from claiming the same batch.
+        conn.execute("BEGIN IMMEDIATE")
 
-    # Crash recovery: reset stale processing records
-    cutoff = (datetime.datetime.now() - datetime.timedelta(minutes=5)).isoformat()
-    conn.execute(
-        "UPDATE followers SET status = 'pending' "
-        "WHERE status = 'processing' AND processed_at < ?",
-        (cutoff,)
-    )
-
-    # Claim pending records atomically
-    batch_size = config.BATCH_SIZE
-    rows = conn.execute(
-        "SELECT * FROM followers WHERE status = 'pending' LIMIT ?",
-        (batch_size,)
-    ).fetchall()
-
-    batch = [dict(row) for row in rows]
-
-    if batch:
-        handles = [r["handle"] for r in batch]
-        placeholders = ",".join("?" for _ in handles)
-        now = datetime.datetime.now().isoformat()
+        # Crash recovery: reset stale processing records
+        cutoff = (datetime.datetime.now() - datetime.timedelta(minutes=5)).isoformat()
         conn.execute(
-            f"UPDATE followers SET status = 'processing', processed_at = ? "
-            f"WHERE handle IN ({placeholders})",
-            [now] + handles,
+            "UPDATE followers SET status = 'pending' "
+            "WHERE status = 'processing' AND processed_at < ?",
+            (cutoff,)
         )
 
-    conn.commit()
-    conn.close()
-    return batch
+        # Claim pending records atomically
+        batch_size = config.BATCH_SIZE
+        rows = conn.execute(
+            "SELECT * FROM followers WHERE status = 'pending' LIMIT ?",
+            (batch_size,)
+        ).fetchall()
+
+        batch = [dict(row) for row in rows]
+
+        if batch:
+            handles = [r["handle"] for r in batch]
+            placeholders = ",".join("?" for _ in handles)
+            now = datetime.datetime.now().isoformat()
+            conn.execute(
+                f"UPDATE followers SET status = 'processing', processed_at = ? "
+                f"WHERE handle IN ({placeholders})",
+                [now] + handles,
+            )
+
+        conn.commit()
+        return batch
+    finally:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        conn.close()
 
 
 def process_batch(db_path, batch, fetcher_fn):
@@ -159,43 +165,47 @@ def run_with_retries(db_path, batch, fetcher_fn):
             error_handles = []
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row
-            for follower in current_batch:
-                row = conn.execute(
-                    "SELECT status FROM followers WHERE handle = ?",
-                    (follower["handle"],)
-                ).fetchone()
-                if row and row["status"] == "error":
-                    error_handles.append(follower["handle"])
+            try:
+                for follower in current_batch:
+                    row = conn.execute(
+                        "SELECT status FROM followers WHERE handle = ?",
+                        (follower["handle"],)
+                    ).fetchone()
+                    if row and row["status"] == "error":
+                        error_handles.append(follower["handle"])
 
-            for h in error_handles:
-                conn.execute(
-                    "UPDATE followers SET status = 'pending', error_message = NULL WHERE handle = ?",
-                    (h,)
-                )
-            conn.commit()
+                for h in error_handles:
+                    conn.execute(
+                        "UPDATE followers SET status = 'pending', error_message = NULL WHERE handle = ?",
+                        (h,)
+                    )
+                conn.commit()
 
-            # Re-fetch the error records for retry
-            current_batch = []
-            for h in error_handles:
-                row = conn.execute(
-                    "SELECT * FROM followers WHERE handle = ?", (h,)
-                ).fetchone()
-                if row:
-                    current_batch.append(dict(row))
-            conn.close()
+                # Re-fetch the error records for retry
+                current_batch = []
+                for h in error_handles:
+                    row = conn.execute(
+                        "SELECT * FROM followers WHERE handle = ?", (h,)
+                    ).fetchone()
+                    if row:
+                        current_batch.append(dict(row))
+            finally:
+                conn.close()
 
     # Count remaining errors
     final_errors = 0
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    for follower in batch:
-        row = conn.execute(
-            "SELECT status FROM followers WHERE handle = ?",
-            (follower["handle"],)
-        ).fetchone()
-        if row and row["status"] == "error":
-            final_errors += 1
-    conn.close()
+    try:
+        for follower in batch:
+            row = conn.execute(
+                "SELECT status FROM followers WHERE handle = ?",
+                (follower["handle"],)
+            ).fetchone()
+            if row and row["status"] == "error":
+                final_errors += 1
+    finally:
+        conn.close()
 
     return {
         "completed": total_completed,

@@ -245,19 +245,15 @@ def _business_subcategory(text):
 
 def _is_personal_rescue(text):
     """Return True if 'rescue' appears only in personal pet-owner context."""
-    if not _has_any(text, ["rescue"]):
+    if "rescue" not in text:
         return False
     if _has_any(text, _STRONG_CHARITY_KEYWORDS):
         return False
     if _PERSONAL_RESCUE_RE.search(text):
         return True
-    # "rescue" alone without org context is also personal
-    if "rescue" in text and not _has_any(text, _STRONG_CHARITY_KEYWORDS):
-        # Check if there's org context like "organization", "foundation", "society"
-        if _has_any(text, ["organization", "foundation", "society", "network"]):
-            return False
-        return True
-    return False
+    if _has_any(text, ["organization", "foundation", "society", "network"]):
+        return False
+    return True
 
 
 def _is_school_exclusion(text):

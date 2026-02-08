@@ -48,9 +48,10 @@ def rescore(db_path, dry_run=False):
         new_subcat = result["subcategory"]
         new_conf = result["confidence"]
 
-        # Re-score with new category
+        # Re-score with new category and subcategory
         score_profile = dict(profile)
         score_profile["category"] = new_cat
+        score_profile["subcategory"] = new_subcat
         score_result = score(score_profile)
         new_score = score_result["priority_score"]
         new_reason = score_result["priority_reason"]
