@@ -6,7 +6,7 @@ Automated tool to analyze [Hawaii Fi-Do's](https://www.instagram.com/hawaiifido/
 
 1. **Parses** follower data from a CSV export into a SQLite database
 2. **Enriches** each profile via browser automation (follower count, bio, business status, etc.)
-3. **Classifies** accounts into categories: local business, organization, bank/financial, pet industry, influencer, elected official, and more
+3. **Classifies** accounts into 15 categories, including service-dog aligned, corporate, local/national business, organization, bank/financial, pet industry, influencer, and more
 4. **Scores** followers 0–100 based on Hawaii location, reach, engagement signals, and category
 5. **Surfaces** results through interactive Claude Code slash commands
 
@@ -20,7 +20,7 @@ Automated tool to analyze [Hawaii Fi-Do's](https://www.instagram.com/hawaiifido/
 ## Project Structure
 
 ```
-├── PRD.md                  # Product requirements (v1.3)
+├── PRD.md                  # Product requirements (v1.4)
 ├── data/
 │   ├── followers_validated.csv   # Source CSV (~830 followers, gitignored)
 │   └── followers.db              # SQLite database (generated)
@@ -29,7 +29,7 @@ Automated tool to analyze [Hawaii Fi-Do's](https://www.instagram.com/hawaiifido/
 │   ├── csv_parser.py           # Phase 1: CSV → dict list
 │   ├── database.py             # SQLite CRUD operations
 │   ├── location_detector.py    # Hawaii confidence scoring
-│   ├── classifier.py           # Account categorization (13 categories)
+│   ├── classifier.py           # Account categorization (15 categories)
 │   ├── scorer.py               # Priority scoring (0–100) + tier assignment
 │   ├── profile_parser.py       # Deterministic Instagram page parser
 │   ├── batch_orchestrator.py   # Batch processing with retry logic
@@ -38,7 +38,7 @@ Automated tool to analyze [Hawaii Fi-Do's](https://www.instagram.com/hawaiifido/
 │   ├── fixtures/               # CSV + JSON test data
 │   └── unit/                   # Per-module test files
 ├── output/                     # Generated exports (CSV + markdown)
-└── .claude/skills/             # Phase 3 slash commands
+└── .claude/skills/             # Slash-command skill directories (<cmd>/SKILL.md)
 ```
 
 ## Setup
@@ -97,7 +97,7 @@ Run these in Claude Code with the project open:
 | `/enrich` | Enrich pending profiles via browser automation |
 | `/prospects` | Top engagement candidates (score >= 60) |
 | `/summary` | Full statistical dashboard |
-| `/donors` | Financial resource targets (banks, businesses, orgs) |
+| `/donors` | Financial resource targets (banks, businesses, orgs, service-dog aligned, corporate) |
 | `/outreach` | Actionable contact list grouped by tier |
 | `/export` | Write CSV/markdown files to `output/` |
 
@@ -112,7 +112,7 @@ Each command supports optional filters — run the command with no arguments for
 | 40–59 | Tier 3 — Low Priority | Worth monitoring |
 | 0–39 | Tier 4 — Skip | Low priority |
 
-Key scoring factors: Hawaii location (+30), bank/financial (+30), pet industry (+25), organization (+25), business account (+20), follower reach (up to +20), and engagement signals.
+Key scoring factors include Hawaii location (+30), service-dog aligned (+35), bank/financial (+30), corporate (+25), pet industry (+25, breeder +10), organization (+25), business account (+20), reach (+0 to +20), plus engagement bonuses (website, mission alignment, dogs/pets, community, veteran, donor language) and penalties (charity, private, spam, no bio).
 
 ## Development
 
@@ -132,9 +132,11 @@ Settings in `src/config.py` with env var overrides:
 
 | Setting | Default | Env Var |
 |---------|---------|---------|
-| `BATCH_SIZE` | 5| `BATCH_SIZE` |
+| `BATCH_SIZE` | 5 | `BATCH_SIZE` |
 | `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` |
 | `MAX_RETRIES` | 3 | `MAX_RETRIES` |
+
+`MAX_SUBAGENTS` is currently used by the `/enrich` orchestration convention (2 browser workers); `src/batch_orchestrator.py` itself does not spawn workers.
 
 ## License
 

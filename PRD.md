@@ -3,8 +3,8 @@
 ## Project Overview
 
 **Project Name:** Hawaii Fi-Do Instagram Follower Analyzer
-**Version:** 1.3
-**Date:** February 4th, 2026
+**Version:** 1.4
+**Date:** February 8, 2026
 **Owner:** Hawaii Fi-Do
 
 ### Purpose
@@ -83,7 +83,7 @@ Hawaii Fi-Do is a service dog nonprofit organization. To grow community support 
 
 Phase 3 replaces static file generation with **6 Claude Code slash commands** that query the database live. Each command has smart defaults (useful with zero arguments) and optional filters for drilling down.
 
-**Architecture:** All 6 commands are prompt-driven Claude Code skills (`.claude/skills/` markdown files). The analysis commands instruct Claude to query SQLite directly and format results as markdown tables in the terminal. The `/enrich` command orchestrates Phase 2 browser automation. The DB path `data/followers.db` is auto-detected relative to project root.
+**Architecture:** All 6 commands are prompt-driven Claude Code skills in directory form (`.claude/skills/<command>/SKILL.md`). The analysis commands instruct Claude to query SQLite directly and format results as markdown tables in the terminal. The `/enrich` command orchestrates Phase 2 browser automation. The DB path `data/followers.db` is auto-detected relative to project root.
 
 #### `/enrich` — Profile Enrichment Orchestrator
 - Launches 2 parallel browser subagents to enrich pending followers
@@ -107,7 +107,7 @@ Phase 3 replaces static file generation with **6 Claude Code slash commands** th
   - "Needs Review" list (unknown + error accounts)
 
 #### `/donors` — Financial Resource Targets
-- **Default:** bank_financial + business_local + organization with score >= 50, sorted by priority_score desc
+- **Default:** bank_financial + business_local + organization + service_dog_aligned + corporate with score >= 50, sorted by priority_score desc
 - **Filters:** `--hawaii`, `--min-score`
 - **Columns:** handle, display_name, category, subcategory, priority_score, bio (truncated 80 chars), website
 
@@ -175,18 +175,20 @@ followers (
 
 | Category | Description | Priority |
 |----------|-------------|----------|
-| `business_local` | Hawaii-based business | HIGH |
-| `organization` | rotary club, member club (golf, elks, etc), church, school, community group | HIGH |
+| `service_dog_aligned` | Service/therapy/guide dog and assistance-animal aligned accounts | HIGH |
 | `bank_financial` | Banks, financial services | HIGH |
-| `pet_industry` | Pet/animal businesses: vets, trainers, pet stores, groomers, pet food, dog services. Commercial only — nonprofits stay as `charity`. | HIGH |
-| `influencer` | High follower count (10k+) | HIGH |
+| `corporate` | Large corporate entities (utilities, airlines, insurance, large business accounts) | HIGH |
+| `pet_industry` | Pet/animal businesses: vets, trainers, breeders, boarding/daycare, pet stores, groomers, rehab, pet food | HIGH |
+| `organization` | Rotary/club/church/school/chamber/association/community groups, plus government/military organizations | HIGH |
+| `charity` | Nonprofits/charities (with `partner` subcategory for mission-aligned partners) | SKIP/CONTEXT |
 | `elected_official` | Hawaii-based government elected official such as councilman | HIGH |
 | `media_event` | Local media, events, photographers, press outlets | MEDIUM |
+| `business_local` | Hawaii-based business | HIGH |
 | `business_national` | Non-Hawaii business | MEDIUM |
+| `influencer` | High follower count (10k+) | MEDIUM |
+| `spam_bot` | Fake/bot accounts | SKIP |
 | `personal_engaged` | Active personal account | LOW |
 | `personal_passive` | Low activity personal | SKIP |
-| `charity` | Other nonprofits/charities | SKIP |
-| `spam_bot` | Fake/bot accounts | SKIP |
 | `unknown` | Could not classify | REVIEW |
 
 ### Subcategory Values
@@ -195,11 +197,13 @@ Subcategories are best-effort from bio keywords and are **not used in scoring**:
 
 | Category | Subcategory values |
 |----------|-------------------|
-| `pet_industry` | `veterinary`, `trainer`, `pet_store`, `groomer`, `pet_food`, `general` |
-| `business_local` | `restaurant`, `retail`, `service`, `real_estate`, `general` |
-| `organization` | `church`, `school`, `club`, `community_group`, `general` |
+| `service_dog_aligned` | `therapy`, `guide`, `emotional_support`, `service`, `general` |
+| `pet_industry` | `veterinary`, `trainer`, `breeder`, `pet_store`, `groomer`, `pet_food`, `boarding`, `pet_care`, `rehabilitation`, `general` |
+| `business_local` / `business_national` | `restaurant`, `hospitality`, `retail`, `service`, `real_estate`, `legal`, `general` |
+| `organization` | `government`, `church`, `school`, `club`, `community_group` |
 | `bank_financial` | `bank`, `credit_union`, `financial_advisor`, `general` |
 | `media_event` | `event`, `photographer`, `news`, `media`, `general` |
+| `charity` | `partner`, `general` |
 | All others | `general` (default) |
 
 ### Classification Decision Rules
@@ -207,37 +211,56 @@ Subcategories are best-effort from bio keywords and are **not used in scoring**:
 Rules are evaluated in priority order — first match wins. All keyword checks scan **handle + display_name + bio** (not just bio):
 
 ```
-1.  bio/handle/name contains "bank" or "financial" or "credit union"       → bank_financial
-2.  bio/handle/name contains pet industry keywords¹
-    AND (is_business=True OR commercial signal²)                           → pet_industry
-3.  bio/handle/name contains "church","school","rotary","club","golf"
-    AND NOT charity keywords                                               → organization
-4.  bio/handle/name contains "rescue","humane","nonprofit","501c","shelter","charity"  → charity
-5.  bio/handle/name contains "council","mayor","senator","representative",
-    "governor" AND is_hawaii=True                                          → elected_official
-6.  bio/handle/name contains "event","tournament","open","festival",
-    "magazine","news","photographer","media","press"                       → media_event
-7.  is_business=True AND is_hawaii=True                                    → business_local
-8.  is_business=True AND is_hawaii=False                                   → business_national
-9.  follower_count >= 10000 AND is_business=False                          → influencer
-10. following_count > 10 * follower_count AND post_count < 5               → spam_bot
-11. post_count > 50 AND !is_business                                       → personal_engaged
-12. post_count <= 50 AND !is_business                                      → personal_passive
-13. No signals match                                                       → unknown (confidence < 0.5)
+0.  bio/handle/name contains service-dog keywords¹                           → service_dog_aligned
+1.  bio/handle/name contains "bank" or "financial" or "credit union"        → bank_financial
+2.  bio/handle/name contains corporate keywords²
+    OR (is_business=True AND follower_count >= 25000)                        → corporate
+3.  bio/handle/name contains strong pet keywords³                            → pet_industry
+    OR (pet keywords⁴ AND (is_business=True OR commercial signal⁵))
+4.  bio/handle/name contains government/military keywords⁶                   → organization(government)
+5.  bio/handle/name contains organization keywords⁷
+    AND NOT charity keywords⁸ (plus guard rails for false positives)         → organization
+6.  bio/handle/name contains charity keywords⁸
+    and is not "personal rescue" context                                     → charity
+7.  bio/handle/name contains elected keywords and is_hawaii=True             → elected_official
+8.  bio/handle/name contains media/event keywords                            → media_event
+9.  (is_business=True OR strong business keywords⁹) and is_hawaii=True       → business_local
+10. (is_business=True OR strong business keywords⁹) and is_hawaii=False      → business_national
+11. follower_count >= 10000 AND is_business=False                            → influencer
+12. following_count > 10 * follower_count AND post_count < 5                 → spam_bot
+13. post_count > 50 AND !is_business                                         → personal_engaged
+14. post_count <= 50 AND !is_business                                        → personal_passive
+15. No signals match                                                         → unknown (confidence 0.3)
 ```
 
-¹ **Pet industry keywords:** "veterinar", "vet clinic", "pet ", "dog trainer", "groomer", "kennel", "animal hospital", "canine", "paws", "pet food", "pet supply", "dog gym"
+¹ **Service-dog keywords:** "service dog", "therapy dog", "assistance dog", "guide dog", "service animal", "working dog", "canine assisted", "animal assisted therapy", "ptsd dog", "seizure dog"
 
-² **Commercial signals:** handle/name/bio suggests a business (e.g., "shop", "store", "service", "clinic", "supply", "co", "inc")
+² **Corporate keywords:** "electric", "utility", "airline", "telecom", "insurance", "corporation", "corporate", "headquarters", "global"
+
+³ **Strong pet keywords (no business flag needed):** veterinary/vet clinic/animal hospital, dog trainer/training, kennel, groomer/grooming, k9, daycare, boarding, pet sitting, dog walking, obedience, breeder/breeding, puppies/litter, dog trick, pet/animal rehab
+
+⁴ **Pet keywords:** strong list plus lighter signals such as "pet ", "canine", "paws", "pet food", "pet supply", breed terms
+
+⁵ **Commercial signals:** boundary-aware signals such as "shop", "store", "service", "clinic", "supply", "inc", "llc", "co"
+
+⁶ **Government/military keywords:** "government organization", "military", "marine corps", "veterans", "job corps"
+
+⁷ **Organization keywords:** "church", "school", "rotary", "club", "golf", "chamber", "association", "chapter", "foundation", "coalition", "initiative", "alliance"
+
+⁸ **Charity keywords:** "rescue", "humane", "nonprofit", "501c", "shelter", "charity", "spca", "humane society"
+
+⁹ **Strong business keywords:** "brewery", "restaurant", "cafe", "bakery", "hotel", "resort", "real estate", "realty", "realtor", "law firm", "mortgage"
 
 **Key changes from earlier version:**
-- `bank_financial` is rule 1 (fixes Hawaii bank → business_local misclassification)
-- `pet_industry` is rule 2 — requires business signal to exclude nonprofits
-- `organization` excludes charity keywords to prevent "foundation" overlap
+- `service_dog_aligned` is a new highest-priority category (rule 0)
+- `corporate` is explicit and precedes pet/business categories
+- `pet_industry` supports strong pet keywords without requiring the IG business flag
+- `organization` includes expanded civic/community keywords with guard rails
+- `charity` supports `partner` vs `general` subcategories
 - Rules scan **handle + display_name + bio** (not just bio) for keyword matches
-- `business_local`/`business_national` moved after keyword-based categories
+- `business_local`/`business_national` allow strong business keywords even if `is_business=False`
 
-The classifier returns `{category, subcategory, confidence}` where confidence reflects signal strength (0.3–0.9).
+The classifier returns `{category, subcategory, confidence}` where confidence reflects signal strength (0.3–0.95).
 
 ### Location Detection Signals
 
@@ -276,13 +299,18 @@ Multiple signals compound (capped at 1.0). Examples:
 ```
 Base Score:
   - Hawaii-based:          +30 points
-  - Bank/financial:        +30 points  (increased — larger donation capacity)
-  - Pet industry:          +25 points  (NEW)
+  - Service-dog aligned:   +35 points
+  - Bank/financial:        +30 points
+  - Corporate:             +25 points
+  - Pet industry:          +25 points
+  - Pet breeder subtype:   +10 points (instead of +25)
   - Organization:          +25 points
-  - Elected official:      +25 points  (increased — gov't funding channels)
-  - Business account:      +20 points
-  - Media/event:           +15 points  (NEW)
-  - Influencer:            +20 points  (NEW)
+  - Elected official:      +25 points
+  - Local business:        +20 points
+  - National business:     +10 points
+  - Influencer:            +20 points
+  - Media/event:           +15 points
+  - Business account flag: +20 points
   - Verified:              +10 points
 
 Reach Score (based on followers):
@@ -293,17 +321,21 @@ Reach Score (based on followers):
   - <1k followers:         +0 points
 
 Engagement Indicators:
-  - Has website:                      +5 points
-  - Active posting (>100 posts):      +5 points  (threshold now defined)
-  - Bio mentions dogs/pets:           +10 points (does NOT stack with pet_industry)
-  - Bio mentions community/giving:    +5 points
+  - Has website:                                      +5 points
+  - Active posting (>100 posts):                      +5 points
+  - Mission alignment bio (`service dog`/`therapy dog`/`assistance`/`disability`): +10 points
+  - Dogs/pets bio signal:                             +10 points
+  - Bio mentions community/giving:                    +5 points
+  - Bio mentions veterans/military:                   +5 points
+  - Bio mentions donor language (sponsor/partner/donate/fundraise/...): +5 points
 
 No-Stack Rule:
-  If classified as `pet_industry`, the `dogs/pets bio` bonus (+10) does not apply
-  (already factored into the pet_industry category score).
+  - `mission_aligned(+10)` does not apply to `service_dog_aligned`
+  - `dogs/pets bio(+10)` does not apply when category is `pet_industry` or
+    `service_dog_aligned`, and also does not stack with `mission_aligned`
 
 Penalties:
-  - Other charity:         -50 points
+  - Charity (`subcategory != 'partner'`): -50 points
   - Private account:       -20 points
   - Spam indicators:       -100 points
   - No bio:                -10 points
@@ -318,6 +350,8 @@ Penalties:
 | Hawaii pet store + website | above + website(5) | 80 | Tier 1 |
 | Hawaii councilmember, verified, 10k+ | hawaii(30) + elected(25) + verified(10) + reach(15) | 80 | Tier 1 |
 | Hawaii church, 5k followers, website | hawaii(30) + org(25) + reach(10) + website(5) | 70 | Tier 2 |
+| Hawaii service-dog account + website | hawaii(30) + service_dog(35) + website(5) | 70 | Tier 2 |
+| Hawaii corporate account (verified, high reach) | hawaii(30) + corporate(25) + business(20) + verified(10) + reach(20) | 100 (clamped) | Tier 1 |
 | Non-Hawaii influencer, 50k+, website | influencer(20) + reach(20) + website(5) | 45 | Tier 3 |
 
 ### Final Tiers
@@ -347,7 +381,7 @@ All pipeline settings live in `src/config.py` with environment variable override
 | Setting | Default | Env Override | Purpose |
 |---------|---------|-------------|---------|
 | `BATCH_SIZE` | 5 | `BATCH_SIZE` | Profiles per batch  |
-| `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` | Concurrent browser agents |
+| `MAX_SUBAGENTS` | 2 | `MAX_SUBAGENTS` | Target concurrent browser agents (used by skill orchestration convention) |
 | `MAX_RETRIES` | 3 | `MAX_RETRIES` | Total attempts per batch (including initial) |
 
 No external dependencies beyond stdlib for the config module.
@@ -412,15 +446,15 @@ Estimated time remaining: ~45 minutes
 
 ### Phase 2 Output
 - Updated `data/followers.db` with enriched, classified, and scored records
-- `.claude/skills/enrich.md` — /enrich slash command (Phase 2 orchestration)
+- `.claude/skills/enrich/SKILL.md` — /enrich slash command (Phase 2 orchestration)
 - `src/profile_parser.py` — Deterministic profile page parser
 
 ### Phase 3 Output
-- `.claude/skills/prospects.md` — /prospects slash command
-- `.claude/skills/summary.md` — /summary slash command
-- `.claude/skills/donors.md` — /donors slash command
-- `.claude/skills/outreach.md` — /outreach slash command
-- `.claude/skills/export.md` — /export slash command
+- `.claude/skills/prospects/SKILL.md` — /prospects slash command
+- `.claude/skills/summary/SKILL.md` — /summary slash command
+- `.claude/skills/donors/SKILL.md` — /donors slash command
+- `.claude/skills/outreach/SKILL.md` — /outreach slash command
+- `.claude/skills/export/SKILL.md` — /export slash command
 
 ---
 
