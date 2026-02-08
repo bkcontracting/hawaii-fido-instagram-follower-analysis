@@ -6,33 +6,69 @@ description: Enrich all Instagram followers in the database by visiting each pro
 # Instagram Profile Enrichment Skill
 
 ## Description
-Enrich all Instagram followers in the database by visiting each profile via browser automation, extracting profile data, classifying, scoring, and storing results. Designed to run fully autonomously with crash recovery.
+Enrich all Instagram followers in the database by visiting each profile via browser automation, extracting profile data, classifying, scoring, and storing results.
 
-## Restart instructions
-Run `/enrich` or point Claude at this file. It will check DB status and resume from wherever it left off. No additional instructions needed.
+## Recommended: Standalone Script (runs unattended)
 
-## Architecture
+The standalone Python script is the preferred way to enrich all followers.
+It uses Selenium to drive Chrome directly — no Claude subagents, no context
+window limits, no compaction stalls. Processes all 830+ profiles in a single
+unattended session.
+
+```bash
+# 1. Launch Chrome with remote debugging (leave this terminal open)
+google-chrome --remote-debugging-port=9222
+
+# 2. Log into Instagram in that Chrome window if not already logged in
+
+# 3. Run the enrichment script (in a separate terminal)
+python scripts/enrich_browser.py
+```
+
+Options:
+```
+--port PORT              Chrome debugging port (default: 9222)
+--db PATH                Database path (default: data/followers.db)
+--delay-min SECONDS      Min delay between profiles (default: 3)
+--delay-max SECONDS      Max delay between profiles (default: 5)
+--rate-limit-wait MIN    Minutes to wait on rate limit (default: 5)
+--max-errors N           Stop after N consecutive errors (default: 15)
+--dry-run                Show pending profiles without processing
+```
+
+The script is fully restartable — it reads pending records from the DB and
+picks up where it left off. If killed mid-run, stale 'processing' records
+are reset to 'pending' on the next run.
+
+### Why the standalone script instead of Claude subagents?
+
+The original Claude-driven approach hits context window compaction after ~120
+profiles, causing the session to stall and ask about Playwright MCP. The
+standalone script eliminates this entirely because:
+
+1. **No LLM in the loop** — all parsing, classification, and scoring is
+   already deterministic Python code. Claude was only navigating URLs and
+   running `document.body.innerText`. Selenium does this without any tokens.
+2. **No context growth** — the script processes profiles sequentially in a
+   constant-memory loop. No conversation history to replay.
+3. **No compaction stalls** — runs until done or rate-limited. Rate limits
+   are handled with automatic sleep + resume.
+4. **Single AFK session** — 830 profiles at ~4s/profile + delays ≈ 90 minutes.
+
+## Legacy: Claude Subagent Approach
+
+The `/enrich` skill can still be invoked for small batches or when the
+standalone script isn't available. It spawns 2 parallel subagents that
+each process 5 profiles per batch via Claude-in-Chrome MCP. However, it
+will hit context limits after ~120 profiles and require manual restart.
+
+### Architecture (legacy)
 - Main orchestrator runs a thin loop: check DB → launch 2 subagents → wait → repeat
 - Each subagent processes exactly 1 batch (5 profiles) then terminates
 - All state lives in SQLite — recovery is automatic
-- Exactly 2 browser tabs created at startup, navigated in-place (never create new tabs during processing)
+- Exactly 2 browser tabs created at startup, navigated in-place
 
-## Token Optimization — Why Batch Size 5
-Claude Code subagents send full conversation history on every turn, so context
-grows quadratically with profiles processed. Smaller batches keep each subagent's
-context window short and discard accumulated page data between launches.
-
-| Batch | Est. input tokens per 20 profiles | Relative cost |
-|-------|-----------------------------------|---------------|
-| 20    | ~1.76M                            | 1.0x (baseline) |
-| 10    | ~920K                             | 0.52x         |
-| **5** | **~560K**                         | **0.32x**     |
-| 1     | ~340K + high startup overhead     | ~0.25x        |
-
-Batch size 5 is the sweet spot: ~3x cheaper than 20, without the excessive
-subagent-launch overhead of batch size 1. Override via `BATCH_SIZE` env var.
-
-## Main Orchestrator Loop
+### Main Orchestrator Loop (legacy)
 
 ```
 STARTUP:
@@ -59,11 +95,9 @@ FINISH:
   15. Run /summary
 ```
 
-## Subagent Prompt Template
+### Subagent Prompt Template (legacy)
 
 Each subagent receives the tab_id and processes one batch.
-IMPORTANT: Keep responses minimal. Do not echo extracted data or explain
-reasoning. Just call Python functions and return the final count.
 
 1. Claim batch via `create_batch("data/followers.db")`
 2. For each follower in batch:
@@ -71,33 +105,25 @@ reasoning. Just call Python functions and return the final count.
    b. Wait 2s for page load
    c. Grab raw page text via `javascript_tool(tabId)`:
       `document.querySelector('header')?.closest('main')?.innerText || document.body.innerText`
-   d. Pass raw text to deterministic parser — DO NOT parse counts yourself:
-      `from src.profile_parser import parse_profile_page`
-      `enriched = parse_profile_page(raw_text)`
+   d. Pass raw text to `parse_profile_page(raw_text)`
    e. Check `enriched["page_state"]`: if "rate_limited" → stop and return
    f. Run through pipeline: is_hawaii() → classify() → score() → update_follower()
    g. Random delay 3-5s before next profile
 3. Return ONLY: "{completed: N, errors: M, rate_limited: bool}"
 
-## Extraction Method
-- Primary: `javascript_tool(tabId)` → grab innerText → `parse_profile_page(text)`
-- Fallback: `read_page(tabId)` accessibility tree → `parse_profile_page(text)`
-- NEVER parse counts, detect page state, or extract fields manually — always
-  use `parse_profile_page()` which handles K/M suffixes, page states, and all
-  field extraction deterministically
-
 ## Error Handling
 Page state is detected automatically by `parse_profile_page()`:
 - `page_state == "not_found"`: status='error', error_message='not_found'
 - `page_state == "suspended"`: status='error', error_message='suspended'
-- `page_state == "rate_limited"`: stop batch, return rate_limited=true
-- `page_state == "login_required"`: stop batch, return rate_limited=true
+- `page_state == "rate_limited"`: sleep and retry (standalone) or stop batch (legacy)
+- `page_state == "login_required"`: wait for login (standalone) or stop batch (legacy)
 - `page_state == "normal"` + is_private=True: status='private' (enriched data captured)
 - Page timeout: retry once, then status='error'
 
 ## Key Files
-- `src/profile_parser.py` — **deterministic page parser** (parse_count, parse_profile_page, detect_page_state)
-- `src/batch_orchestrator.py` — create_batch() with crash recovery
+- `scripts/enrich_browser.py` — **standalone enrichment script** (Selenium, no LLM)
+- `src/profile_parser.py` — deterministic page parser (parse_count, parse_profile_page, detect_page_state)
+- `src/batch_orchestrator.py` — create_batch() with crash recovery (used by legacy approach)
 - `src/classifier.py` — 13-rule classification
 - `src/scorer.py` — priority scoring 0-100
 - `src/location_detector.py` — is_hawaii() detection

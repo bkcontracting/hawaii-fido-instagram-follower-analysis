@@ -1,4 +1,80 @@
-# Token Optimization & Deterministic Parsing — Changes
+# Changes
+
+## Standalone Browser Enrichment Script
+
+Branch: `claude/fix-instagram-scraper-5xyYF`
+Date: 2026-02-08
+
+### Problem
+
+The Claude-driven enrichment approach (2 subagents driving Chrome via MCP) hits
+context window compaction after ~120 profiles. When compaction fires, the session
+stalls and asks about Playwright MCP (which isn't configured). This makes it
+impossible to process all 830 followers in a single unattended overnight session.
+The user must manually kill the session and restart `/enrich` to continue from
+where it left off.
+
+### Root Cause
+
+Claude Code subagents accumulate conversation history every time they navigate
+a URL and extract page text. After ~120 profiles across multiple subagent
+launches, the orchestrator's own context window fills up, triggers compaction,
+and confuses itself into asking about Playwright MCP.
+
+### Solution
+
+Replace the Claude-driven browser automation with a standalone Python script
+(`scripts/enrich_browser.py`) that uses Selenium to drive Chrome directly.
+No LLM is in the loop — the script is 100% deterministic.
+
+All the parsing, classification, scoring, and DB update logic was **already**
+deterministic Python code. Claude was only doing two things:
+1. Navigating to Instagram profile URLs in a browser tab
+2. Running `document.body.innerText` to extract page text
+
+Selenium does both of those without any tokens or context windows.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `scripts/enrich_browser.py` | **NEW** — standalone Selenium enrichment script |
+| `.claude/skills/enrich/SKILL.md` | Updated to recommend standalone script, moved subagent approach to "legacy" section |
+
+### Usage
+
+```bash
+# 1. Launch Chrome with remote debugging
+google-chrome --remote-debugging-port=9222
+
+# 2. Make sure you're logged into Instagram
+
+# 3. Run the script
+python scripts/enrich_browser.py
+```
+
+The script:
+- Connects to the existing Chrome session (reuses your Instagram login)
+- Processes all pending followers sequentially
+- Handles rate limits with automatic 5-minute sleep + resume
+- Handles login expiry by pausing and waiting for re-login
+- Shows real-time progress with ETA
+- Is fully restartable (picks up from where it left off)
+- Estimated runtime: ~90 minutes for 830 profiles
+
+### Before vs After
+
+| Aspect | Claude Subagents | Standalone Script |
+|--------|-----------------|-------------------|
+| Max profiles/session | ~120 (compaction) | Unlimited |
+| Unattended overnight | No (stalls) | Yes |
+| LLM tokens per profile | ~500-1000 | Zero |
+| Rate limit handling | Manual restart | Auto sleep+resume |
+| Restart required | Yes, every ~120 | Only if Chrome closes |
+
+---
+
+## Token Optimization & Deterministic Parsing
 
 Branch: `claude/optimize-batch-size-HN2Gp`
 Date: 2026-02-06
