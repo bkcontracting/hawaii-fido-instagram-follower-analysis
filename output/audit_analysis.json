@@ -1,0 +1,3414 @@
+{
+  "total_classified": 325,
+  "total_flagged": 163,
+  "flagged_percentage": "50.2%",
+  "flagged_by_type": {
+    "business_flag_inconsistency": 151,
+    "priority_score_anomaly": 9,
+    "engagement_boundary": 8,
+    "rule_conflict": 18,
+    "keyword_cross_contamination": 5,
+    "hawaii_detection_anomaly": 2
+  },
+  "flagged_by_severity": {
+    "medium": 157,
+    "high": 28,
+    "low": 8
+  },
+  "flagged": [
+    {
+      "handle": "woollywarriors",
+      "display_name": "\ud835\udc47\ud835\udc4e\ud835\udc66\ud835\udc59\ud835\udc5c\ud835\udc5f \ud835\udc46\ud835\udc4e\ud835\udc59\ud835\udc4e\ud835\udc67\ud835\udc4e\ud835\udc5f\ud83e\udd87",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_passive, but classifier now suggests pet_industry",
+          "current_category": "personal_passive",
+          "suggested_category": "pet_industry",
+          "current_confidence": 0.5,
+          "suggested_confidence": 0.85
+        }
+      ],
+      "max_severity": "high"
+    },
+    {
+      "handle": "jbphh_teencenter",
+      "display_name": "JBPHH Teen Center",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        }
+      ],
+      "max_severity": "high"
+    },
+    {
+      "handle": "kula_teddybears",
+      "display_name": "Hawaiian Teddy Bear Puppies",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests pet_industry",
+          "current_category": "personal_engaged",
+          "suggested_category": "pet_industry",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        }
+      ],
+      "max_severity": "high"
+    },
+    {
+      "handle": "k8.babcock",
+      "display_name": "Katherine Babcock",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        }
+      ],
+      "max_severity": "high"
+    },
+    {
+      "handle": "gonorthshore",
+      "display_name": "North Shore Chamber",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        }
+      ],
+      "max_severity": "high"
+    },
+    {
+      "handle": "halekuike",
+      "display_name": "Hale K\u016b\u02bbike",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "caninecardiohawaii",
+      "display_name": "Mobile Dog Gym",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "ipothegolden",
+      "display_name": "Ipo\ud83d\udc3e\ud83e\ude75",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "combinedfederalcampaign",
+      "display_name": "Combined Federal Campaign",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "augietulba.hnl",
+      "display_name": "Councilmember Augie Tulba",
+      "category": "elected_official",
+      "confidence": 0.8,
+      "priority_score": 75,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "wellnesskitchenhi",
+      "display_name": "Lisa Matsunaga",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "shinnyolanternfloatinghawaii",
+      "display_name": "ShinnyoLanternFloatingHawai\u02bbi",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "wagandlearn",
+      "display_name": "Julie Ho, CPDT-KA",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc.",
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "bown_arrow",
+      "display_name": "Leryke808",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "billy.n.spike",
+      "display_name": "Billy & Spike",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 45",
+          "category": "service_dog_aligned",
+          "priority_score": 45,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "barkparkhonolulu",
+      "display_name": "Clark Hatch Bark Park at Diamond Head",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        },
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 49 posts",
+          "post_count": 49,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_passive"
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "dachilipeppapupshawaii",
+      "display_name": "Da Chili Peppa Pups Hawai'i \ud83c\udf36\ufe0f",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 60,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "long_live_our_animals",
+      "display_name": "Waiting for beach home for ocean sports athlete Onlyfans",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 50,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "friendsofhawaii",
+      "display_name": "FriendsOfHawaii",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "luna_bitez",
+      "display_name": "Gabriella Abarca",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "k9kokua",
+      "display_name": "K9 Kokua",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "bella_helping_paws",
+      "display_name": "Bella",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "islandveterinarycare",
+      "display_name": "Island Veterinary Care",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "caninepartnersoftherockies",
+      "display_name": "Canine Partners of the Rockies",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kaetyhawaii",
+      "display_name": "Kaety & Cherie",
+      "category": "business_national",
+      "confidence": 0.7,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "its_ben_awhile1",
+      "display_name": "Ben Bryce",
+      "category": "business_national",
+      "confidence": 0.7,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kayla_unstable",
+      "display_name": "Kayla",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hanakoabrewing",
+      "display_name": "Hana Koa Brewing Co.",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 75,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "sonyopenhawaii",
+      "display_name": "Sony Open in Hawaii",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 80,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "harry_and_enzo",
+      "display_name": "Harry Leff & Enzo",
+      "category": "charity",
+      "confidence": 0.85,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "yafavoritelatinaa",
+      "display_name": "Asianna Saragosa-Llarinas",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "qt_and_me",
+      "display_name": "dara Fukuhara",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 35",
+          "category": "service_dog_aligned",
+          "priority_score": 35,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "guidedogsofhawaii",
+      "display_name": "Guide Dogs of Hawai'i \ud83d\udc3e",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 80,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "oursaviorhawaii",
+      "display_name": "Our Savior Lutheran Church",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "leianna_strong",
+      "display_name": "Leianna A.",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "galaxychihuahuas",
+      "display_name": "\ud83d\udcabGalaxy Chihuahua\u2019s",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "heartofkailua",
+      "display_name": "Julianne King",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiianelectric",
+      "display_name": "Hawaiian Electric",
+      "category": "corporate",
+      "confidence": 0.8,
+      "priority_score": 50,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "lohasadventures",
+      "display_name": "LOHA",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "izzi_808",
+      "display_name": "Izzi Chan",
+      "category": "business_national",
+      "confidence": 0.7,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "tailshawaii",
+      "display_name": "Tails of Hawaii | Hawaii\u2019s Best Pet Boarding and Daycare",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "keyword_cross_contamination",
+          "severity": "medium",
+          "description": "Bio contains keywords from multiple categories: pet_industry, business",
+          "keywords_found": [
+            "pet_industry",
+            "business"
+          ],
+          "current_category": "pet_industry"
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "thecoconutpages",
+      "display_name": "The Coconut Pages \ud83e\udd65 FOOD, HEALTH & COMMUNITY COLLAB",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "twogemkennels",
+      "display_name": "TwoGems",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "keyword_cross_contamination",
+          "severity": "medium",
+          "description": "Bio contains keywords from multiple categories: service_dog, pet_industry",
+          "keywords_found": [
+            "service_dog",
+            "pet_industry"
+          ],
+          "current_category": "service_dog_aligned"
+        },
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 40",
+          "category": "service_dog_aligned",
+          "priority_score": 40,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "brister808",
+      "display_name": "Brister Gray Thomas",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "the_oahu_spca",
+      "display_name": "Oahu SPCA - OFFICIAL ACCOUNT",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 80,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "workingdog.innovations",
+      "display_name": "Working Dog Innovations",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 40",
+          "category": "service_dog_aligned",
+          "priority_score": 40,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "glasscandiestudio",
+      "display_name": "Candie Nightingale",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "forcemultiplierstrategicwealth",
+      "display_name": "forcemultiplierstrategicwealth",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiijobcorps",
+      "display_name": "Hawaii Job Corps",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "tikidawg_kauai",
+      "display_name": "Tiki Pet Collars Inc.",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "brotherdogs_kk",
+      "display_name": "Kenai, Koda, Nalu, Mikey, & Carina",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mr.slvdr",
+      "display_name": "Mark Salvador",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mfastenau",
+      "display_name": "Mary Fastenau",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "theofficialroute99hawaii",
+      "display_name": "@Route99Hawaii",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 75,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "erein_trawick",
+      "display_name": "Erein Trawick",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "daisydoodle808",
+      "display_name": "Daisy\ud83c\udf3cDarci",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "michaelsunlee",
+      "display_name": "Michael Sun Lee",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "payapup",
+      "display_name": "Papaya \ud83d\udc3e",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "alohailhawaii",
+      "display_name": "AlohaIndependentLivingHawaii",
+      "category": "charity",
+      "confidence": 0.85,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "maddsgudmann",
+      "display_name": "Madison Gudmann",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "bridgetsrescuebook",
+      "display_name": "bridgetsrescuebook",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "store"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiipetrehab",
+      "display_name": "Hawaii Pet Rehabilitation",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests pet_industry",
+          "current_category": "personal_engaged",
+          "suggested_category": "pet_industry",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "fishcakehawaii",
+      "display_name": "fishcake",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 80,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "accessiblecollege",
+      "display_name": "Annie | College Prep Help",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kerinakahashiphotography",
+      "display_name": "Hawaii Dog Photographer",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mollysaysgoaway",
+      "display_name": "Molly Marie Tate",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "purplepupgo",
+      "display_name": "Pet Transport | Flight Nanny | Dallas, TX",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "emerson_and_co",
+      "display_name": "Emerson Retrievers",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 50,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "amypetersyoga",
+      "display_name": "Amy Peters",
+      "category": "corporate",
+      "confidence": 0.8,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "spwilliams1986",
+      "display_name": "spwilliams1986",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "iadaorg",
+      "display_name": "International Assistance Dog Alliance",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 40",
+          "category": "service_dog_aligned",
+          "priority_score": 40,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "oahudogtraining",
+      "display_name": "O\u2019ahu Dog Training | Kristen Davis, Ph.D.",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "amatayaco",
+      "display_name": "tay",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co.",
+            "co"
+          ]
+        },
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 51 posts",
+          "post_count": 51,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_engaged"
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "imjakeacedo",
+      "display_name": "Jomer Jake Acedo",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiidoggiebakery",
+      "display_name": "Hawaii Doggie Bakery",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 95,
+      "issues": [
+        {
+          "type": "keyword_cross_contamination",
+          "severity": "medium",
+          "description": "Bio contains keywords from multiple categories: pet_industry, business",
+          "keywords_found": [
+            "pet_industry",
+            "business"
+          ],
+          "current_category": "pet_industry"
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "__joselyn__",
+      "display_name": "Joselyn Hollingsworth",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests media_event",
+          "current_category": "personal_engaged",
+          "suggested_category": "media_event",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.75
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "iidahawaiipacific",
+      "display_name": "IIDA Hawaii Pacific Chapter",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "haikuvet",
+      "display_name": "Haiku Veterinary Clinic",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 75,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "anastasiademakas",
+      "display_name": "Anastasia David Demakas\ud83c\uddec\ud83c\uddf7",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "jkauwale",
+      "display_name": "Justin Kauwale",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        },
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 52 posts",
+          "post_count": 52,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_engaged"
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "waipiopetclinic",
+      "display_name": "Waipio Pet Clinic",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 60,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "aimeebchung",
+      "display_name": "Aimee Chung",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "thek9kamp",
+      "display_name": "The K9 Kamp Training & Boarding",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "lifes_little_cravings",
+      "display_name": "Alanna Matavao",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kamaainak9",
+      "display_name": "Kama\u2019aina K9 Adventures",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "blanktv",
+      "display_name": "DangerousMusic4DangerousPeople",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "emma_hooper_",
+      "display_name": "Emma Hooper",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests media_event",
+          "current_category": "personal_engaged",
+          "suggested_category": "media_event",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.75
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "im.alexis.renae",
+      "display_name": "CEO \u2022 Model Coach/Coordinator \u2022 International Model",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "hawaii_detection_anomaly",
+          "severity": "medium",
+          "description": "Bio contains 808 area code but is_hawaii=False",
+          "is_hawaii": 0,
+          "signal": "808 area code in bio"
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "lizscoots",
+      "display_name": "Liz Healy",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "arya.the.servicedog",
+      "display_name": "\ud83c\udf29\ufe0fArya \u201cTwilight\u2019s Stormy Clouds\u201d \ud83c\udf29\ufe0f",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "waikikicommunitycenter",
+      "display_name": "Waikiki Community Center",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "macy_da_opihi",
+      "display_name": "Macy | Dog Tricks \u2022 Hawaii",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 55,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests pet_industry",
+          "current_category": "personal_engaged",
+          "suggested_category": "pet_industry",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "adriennearieff",
+      "display_name": "Adrienne Arieff",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kai_the_opihi",
+      "display_name": "Kaili\ud83c\udf0a\ud83c\udf3a",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "wocuniteorg",
+      "display_name": "WOCunite",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 25,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "waimalues",
+      "display_name": "Waimalu Warriors",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 35,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "efmphawaii",
+      "display_name": "EFMP Marine Corps Base Hawaii",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "ricksellssd",
+      "display_name": "Rick Ramirez",
+      "category": "bank_financial",
+      "confidence": 0.9,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category bank_financial has low score 45",
+          "category": "bank_financial",
+          "priority_score": 45,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "pixelzpupz",
+      "display_name": "pixelzpupz",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "repbranco",
+      "display_name": "Rep. Patrick Pihana Branco",
+      "category": "elected_official",
+      "confidence": 0.8,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "goodvibemutts",
+      "display_name": "Quinoa | Cooper | Ashley",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "scp_rhino_and_nazareth",
+      "display_name": "scp_rhino & nazareth",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiipetportraits",
+      "display_name": "HAWAII\u2019S PET PHOTOGRAPHER",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "goodestdogtreats",
+      "display_name": "Goodest Dog Treats",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 25,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "singleuseplanet",
+      "display_name": "Rachel Kippen",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "dorothy.colby",
+      "display_name": "Dorothy A. Colby",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "serenitynowk9",
+      "display_name": "Serenity Now K9 | Dog Training Services",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "jodiemiller808",
+      "display_name": "Jodie Miller",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "hawaii_detection_anomaly",
+          "severity": "medium",
+          "description": "Bio contains 808 area code but is_hawaii=False",
+          "is_hawaii": 0,
+          "signal": "808 area code in bio"
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "islandboymaka",
+      "display_name": "Maka Marfori",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "faithful_hound_in_service",
+      "display_name": "Flora A Tu Servicio",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "theanimalcookiecompany",
+      "display_name": "The Animal Cookie Company\ud83d\udc3e\ud83d\udc36\ud83c\udf6a\ud83d\udc34\ud83d\udc3e",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "rceasthonolulu",
+      "display_name": "Rotary Club of East Honolulu",
+      "category": "organization",
+      "confidence": 0.8,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "my_service_dog_life",
+      "display_name": "Elijah",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 40",
+          "category": "service_dog_aligned",
+          "priority_score": 40,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "r_noelani",
+      "display_name": "Rae Noelani Vaoifi",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "moph483",
+      "display_name": "Military Order of The Purple Heart - Chapter 483",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.85
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "cannie_chum_hawaiire",
+      "display_name": "Cannie Chum(R) | BIC |",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "llc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "lexi_cooper_frenchieohana",
+      "display_name": "Lexi & Cooper",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "laislaaloha",
+      "display_name": "Samba & Lai\u0301s",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "india.aloha",
+      "display_name": "India Aloha",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "knottyxnaturemaui",
+      "display_name": "Knotty by Nature",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "808bowwow",
+      "display_name": "808bowwow",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "keyword_cross_contamination",
+          "severity": "medium",
+          "description": "Bio contains keywords from multiple categories: pet_industry, business",
+          "keywords_found": [
+            "pet_industry",
+            "business"
+          ],
+          "current_category": "pet_industry"
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "store"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "getchokelove",
+      "display_name": "Choke Love \ud83c\udf4d",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "haydentamra",
+      "display_name": "Lambert Pai",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "cocoinhawaii",
+      "display_name": "Dogzilla Boutique",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "teamjacohawaii",
+      "display_name": "Jaco Rehab",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "capone.and.maggie.plus4",
+      "display_name": "\ud83d\udc95 Maggie & her son Cooper \ud83d\udc3e",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "jack.martin615",
+      "display_name": "Jack Martin",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "apetperspective",
+      "display_name": "A Pet Perspective | Dog Behavior Specialist",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "tarasdogservices",
+      "display_name": "Tara\u2019s Dog Services",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "corrie_beth",
+      "display_name": "Corrie Miller",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "compassionatecanine808",
+      "display_name": "CompassionateCanine808\ud83d\udc3e",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 60,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "hawaiidisability",
+      "display_name": "Hawaii Disability Legal Services",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "pearlhotelwaikiki",
+      "display_name": "Pearl Hotel Waikiki",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "chrissiepinney",
+      "display_name": "Chrissie Pinney",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 60,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "doggyboxhawaii",
+      "display_name": "Doggy Box Grooming Salon",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 50,
+      "issues": [
+        {
+          "type": "keyword_cross_contamination",
+          "severity": "high",
+          "description": "Bio contains keywords from multiple categories: service_dog, pet_industry, business",
+          "keywords_found": [
+            "service_dog",
+            "pet_industry",
+            "business"
+          ],
+          "current_category": "service_dog_aligned"
+        },
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 50",
+          "category": "service_dog_aligned",
+          "priority_score": 50,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "pkbsweets",
+      "display_name": "Paalaa Kai Bakery",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "oahupetsitting",
+      "display_name": "Oahu\ud83c\udf34Pet Sitting \ud83d\udc36",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "alohasunshinephotography",
+      "display_name": "Aloha Sunshine Photography",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 60,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "cynthiasfineartstudio",
+      "display_name": "Cynthia Edwards Thompson",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "melissasnc6",
+      "display_name": "Melissa Sanchez",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 10,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "pineapplesandpawprints",
+      "display_name": "Pineapples & Pawprints",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 40,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "jchawaiirealty",
+      "display_name": "Jessica Chiu RB-22668 (CRB)",
+      "category": "business_local",
+      "confidence": 0.7,
+      "priority_score": 65,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "artbridgeevents",
+      "display_name": "Artist Chanel Tanaka Geisha",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 55,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "greataloharun",
+      "display_name": "Great Aloha Run",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 50,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests media_event",
+          "current_category": "personal_engaged",
+          "suggested_category": "media_event",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.75
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "frenchbulldog_world.ak",
+      "display_name": "Frenchbulldog",
+      "category": "influencer",
+      "confidence": 0.7,
+      "priority_score": 55,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co",
+            "shop"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "barks_and_whistles",
+      "display_name": "Maria Maureene Batangan",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kaeb100503",
+      "display_name": "kaeb100503",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "wagalong_petsittinghawaii",
+      "display_name": "Wagalong Pet Sitting",
+      "category": "pet_industry",
+      "confidence": null,
+      "priority_score": null,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": 0,
+          "commercial_signals_found": [
+            "inc"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "n09170205",
+      "display_name": "Nicky",
+      "category": "service_dog_aligned",
+      "confidence": 0.95,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "priority_score_anomaly",
+          "severity": "high",
+          "description": "High-value category service_dog_aligned has low score 45",
+          "category": "service_dog_aligned",
+          "priority_score": 45,
+          "expected_minimum": 60
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "kukoludesigns",
+      "display_name": "KU\u0304 KOLU DESIGNS",
+      "category": "media_event",
+      "confidence": 0.75,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co",
+            "business"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "revitalizepuna",
+      "display_name": "Revitalize Puna",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 45,
+      "issues": [
+        {
+          "type": "rule_conflict",
+          "severity": "high",
+          "description": "Current rule matched personal_engaged, but classifier now suggests organization",
+          "current_category": "personal_engaged",
+          "suggested_category": "organization",
+          "current_confidence": 0.6,
+          "suggested_confidence": 0.8
+        },
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "jaxabreu",
+      "display_name": "The Secret Life of Jax\ud83d\udc36 (Oahu,Hawaii) Prince \u201cJax\u201d Abreu",
+      "category": "charity",
+      "confidence": 0.85,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "inc",
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mollynanibeachbags",
+      "display_name": "",
+      "category": "spam_bot",
+      "confidence": 0.8,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mrjasontom",
+      "display_name": "Jason Tom",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 20,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "barbyinparadise",
+      "display_name": "Barbara",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 5,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "fureverfriendshi",
+      "display_name": "Furever Friends Play And Stay",
+      "category": "pet_industry",
+      "confidence": 0.85,
+      "priority_score": 70,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co",
+            "service"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "krystalkakimoto",
+      "display_name": "",
+      "category": "spam_bot",
+      "confidence": 0.8,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "curtw923",
+      "display_name": "",
+      "category": "spam_bot",
+      "confidence": 0.8,
+      "priority_score": 0,
+      "issues": [
+        {
+          "type": "business_flag_inconsistency",
+          "severity": "medium",
+          "description": "is_business=False but bio contains commercial signals",
+          "is_business": null,
+          "commercial_signals_found": [
+            "co"
+          ]
+        }
+      ],
+      "max_severity": "medium"
+    },
+    {
+      "handle": "mynameisluna_hi",
+      "display_name": "Luna \u2728",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 48 posts",
+          "post_count": 48,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_passive"
+        }
+      ],
+      "max_severity": "low"
+    },
+    {
+      "handle": "bbandvader",
+      "display_name": "bbandvader",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 52 posts",
+          "post_count": 52,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_engaged"
+        }
+      ],
+      "max_severity": "low"
+    },
+    {
+      "handle": "mrfinnspeer",
+      "display_name": "Finn",
+      "category": "personal_passive",
+      "confidence": 0.5,
+      "priority_score": 30,
+      "issues": [
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 50 posts",
+          "post_count": 50,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_passive"
+        }
+      ],
+      "max_severity": "low"
+    },
+    {
+      "handle": "olivianewtondawg",
+      "display_name": "Olivia",
+      "category": "personal_engaged",
+      "confidence": 0.6,
+      "priority_score": 15,
+      "issues": [
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near influencer threshold: 9712 followers",
+          "follower_count": 9712,
+          "boundary": "influencer (10k)",
+          "category": "personal_engaged"
+        }
+      ],
+      "max_severity": "low"
+    },
+    {
+      "handle": "kai.younger",
+      "display_name": "Kai Younger",
+      "category": "personal_passive",
+      "confidence": null,
+      "priority_score": null,
+      "issues": [
+        {
+          "type": "engagement_boundary",
+          "severity": "low",
+          "description": "Near engagement threshold: 49 posts",
+          "post_count": 49,
+          "boundary": "personal_engaged (50)",
+          "category": "personal_passive"
+        }
+      ],
+      "max_severity": "low"
+    }
+  ]
+}
