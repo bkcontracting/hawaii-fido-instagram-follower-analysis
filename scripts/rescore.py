@@ -22,71 +22,73 @@ from src.scorer import score, get_tier
 def _connect(db_path):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
     return conn
 
 
 def rescore(db_path, dry_run=False):
     conn = _connect(db_path)
-    rows = conn.execute(
-        "SELECT * FROM followers WHERE status = 'completed'"
-    ).fetchall()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM followers WHERE status = 'completed'"
+        ).fetchall()
 
-    if not rows:
-        print("No completed followers found.")
-        conn.close()
-        return
+        if not rows:
+            print("No completed followers found.")
+            return
 
-    changes = []
-    for row in rows:
-        profile = dict(row)
-        old_cat = profile.get("category")
-        old_score = profile.get("priority_score")
+        changes = []
+        for row in rows:
+            profile = dict(row)
+            old_cat = profile.get("category")
+            old_score = profile.get("priority_score")
 
-        # Re-classify
-        result = classify(profile)
-        new_cat = result["category"]
-        new_subcat = result["subcategory"]
-        new_conf = result["confidence"]
+            # Re-classify
+            result = classify(profile)
+            new_cat = result["category"]
+            new_subcat = result["subcategory"]
+            new_conf = result["confidence"]
 
-        # Re-score with new category and subcategory
-        score_profile = dict(profile)
-        score_profile["category"] = new_cat
-        score_profile["subcategory"] = new_subcat
-        score_result = score(score_profile)
-        new_score = score_result["priority_score"]
-        new_reason = score_result["priority_reason"]
+            # Re-score with new category and subcategory
+            score_profile = dict(profile)
+            score_profile["category"] = new_cat
+            score_profile["subcategory"] = new_subcat
+            score_result = score(score_profile)
+            new_score = score_result["priority_score"]
+            new_reason = score_result["priority_reason"]
 
-        cat_changed = old_cat != new_cat
-        score_delta = (new_score - old_score) if old_score is not None else None
-        big_score_change = score_delta is not None and abs(score_delta) > 10
+            cat_changed = old_cat != new_cat
+            score_delta = (new_score - old_score) if old_score is not None else None
+            big_score_change = score_delta is not None and abs(score_delta) > 10
 
-        if cat_changed or big_score_change:
-            old_tier = get_tier(old_score) if old_score is not None else "N/A"
-            new_tier = get_tier(new_score)
-            changes.append({
-                "handle": profile["handle"],
-                "old_category": old_cat,
-                "new_category": new_cat,
-                "old_score": old_score,
-                "new_score": new_score,
-                "score_delta": score_delta,
-                "old_tier": old_tier,
-                "new_tier": new_tier,
-            })
+            if cat_changed or big_score_change:
+                old_tier = get_tier(old_score) if old_score is not None else "N/A"
+                new_tier = get_tier(new_score)
+                changes.append({
+                    "handle": profile["handle"],
+                    "old_category": old_cat,
+                    "new_category": new_cat,
+                    "old_score": old_score,
+                    "new_score": new_score,
+                    "score_delta": score_delta,
+                    "old_tier": old_tier,
+                    "new_tier": new_tier,
+                })
+
+            if not dry_run:
+                conn.execute(
+                    """UPDATE followers
+                       SET category = ?, subcategory = ?, confidence = ?,
+                           priority_score = ?, priority_reason = ?
+                       WHERE handle = ?""",
+                    (new_cat, new_subcat, new_conf, new_score, new_reason,
+                     profile["handle"]),
+                )
 
         if not dry_run:
-            conn.execute(
-                """UPDATE followers
-                   SET category = ?, subcategory = ?, confidence = ?,
-                       priority_score = ?, priority_reason = ?
-                   WHERE handle = ?""",
-                (new_cat, new_subcat, new_conf, new_score, new_reason,
-                 profile["handle"]),
-            )
-
-    if not dry_run:
-        conn.commit()
-    conn.close()
+            conn.commit()
+    finally:
+        conn.close()
 
     # Print report
     print(f"\nRescored {len(rows)} followers.")

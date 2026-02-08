@@ -384,6 +384,51 @@ def test_update_follower_multiple_fields(tmp_path):
     assert row["status"] == "completed"
 
 
+def test_update_follower_rejects_invalid_column(tmp_path):
+    """update_follower raises ValueError for invalid column names."""
+    import pytest
+    from src.database import init_db, insert_followers, update_follower
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    insert_followers(db_path, SAMPLE_FOLLOWERS)
+
+    with pytest.raises(ValueError, match="Invalid column"):
+        update_follower(db_path, "alice_dog", {"bad_column": "value"})
+
+
+def test_update_follower_rejects_mixed_valid_invalid_columns(tmp_path):
+    """update_follower raises ValueError when any column is invalid."""
+    import pytest
+    from src.database import init_db, insert_followers, update_follower
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    insert_followers(db_path, SAMPLE_FOLLOWERS)
+
+    with pytest.raises(ValueError, match="Invalid column"):
+        update_follower(db_path, "alice_dog", {"status": "completed", "hacked": "yes"})
+
+
+def test_update_follower_empty_dict_is_noop(tmp_path):
+    """update_follower with empty dict returns without error or DB changes."""
+    from src.database import init_db, insert_followers, update_follower
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    insert_followers(db_path, SAMPLE_FOLLOWERS)
+
+    update_follower(db_path, "alice_dog", {})
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT status FROM followers WHERE handle = ?", ("alice_dog",)
+    ).fetchone()
+    conn.close()
+    assert row["status"] == "pending"
+
+
 def test_get_status_counts(tmp_path):
     """get_status_counts returns dict of status -> count."""
     from src.database import init_db, insert_followers, update_follower, get_status_counts

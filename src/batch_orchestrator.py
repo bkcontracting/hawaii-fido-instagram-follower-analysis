@@ -1,12 +1,21 @@
 """Batch processing orchestrator with crash recovery and retry logic."""
 import datetime
 import sqlite3
+import sys
 
 from src import config
 from src.database import update_follower
 from src.location_detector import is_hawaii
 from src.classifier import classify
 from src.scorer import score
+
+
+def _connect(db_path):
+    """Open a connection with Row factory and WAL mode."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    return conn
 
 
 def create_batch(db_path):
@@ -16,8 +25,7 @@ def create_batch(db_path):
     then atomically claims pending records as 'processing'.
     Returns list of dicts, or [] when no pending records remain.
     """
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _connect(db_path)
 
     try:
         # Use BEGIN IMMEDIATE to acquire a write lock before reading,
@@ -131,6 +139,7 @@ def process_batch(db_path, batch, fetcher_fn):
             completed += 1
 
         except Exception as e:
+            print(f"[ERROR] {handle}: {type(e).__name__}: {e}", file=sys.stderr)
             update_follower(db_path, handle, {
                 "status": "error",
                 "error_message": str(e),
@@ -163,8 +172,7 @@ def run_with_retries(db_path, batch, fetcher_fn):
             retries_used += 1
             # Reset error records to pending for retry
             error_handles = []
-            conn = sqlite3.connect(db_path)
-            conn.row_factory = sqlite3.Row
+            conn = _connect(db_path)
             try:
                 for follower in current_batch:
                     row = conn.execute(
@@ -194,8 +202,7 @@ def run_with_retries(db_path, batch, fetcher_fn):
 
     # Count remaining errors
     final_errors = 0
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    conn = _connect(db_path)
     try:
         for follower in batch:
             row = conn.execute(
