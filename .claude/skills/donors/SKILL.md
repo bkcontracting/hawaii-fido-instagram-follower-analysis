@@ -8,13 +8,13 @@ description: Show financial resource targets — banks, local businesses, organi
 Query `data/followers.db` for potential donors and financial partners.
 
 ## Default Behavior
-- Filter: `category IN ('bank_financial', 'business_local', 'organization')` and `priority_score >= 50` and `status = 'completed'`
+- Filter: `category IN ('bank_financial', 'business_local', 'organization', 'service_dog_aligned', 'corporate')` and `priority_score >= 50` and `status = 'completed'`
 - Sort: `priority_score DESC`
 
 ## Optional Filters (from user arguments)
 - `--hawaii` — only show `is_hawaii = 1`
 - `--min-score <N>` — override minimum score (default 50)
-- `--category <value>` — filter to a single donor category (e.g., `bank_financial`, `business_local`, `organization`)
+- `--category <value>` — filter to a single donor category (e.g., `bank_financial`, `business_local`, `organization`, `service_dog_aligned`, `corporate`)
 - `--limit <N>` — limit number of rows returned (default: no limit)
 
 ## Output Columns
@@ -43,7 +43,7 @@ SELECT handle, display_name, category, subcategory, priority_score,
   SUBSTR(bio, 1, 80) as bio, website, is_hawaii, profile_url
 FROM followers
 WHERE status = 'completed'
-  AND category IN ('bank_financial', 'business_local', 'organization')
+  AND category IN ('bank_financial', 'business_local', 'organization', 'service_dog_aligned', 'corporate')
   AND priority_score >= 50
 ORDER BY priority_score DESC
 -- Add LIMIT N if --limit is provided

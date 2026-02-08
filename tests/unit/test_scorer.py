@@ -245,3 +245,186 @@ class TestReturnStructure:
         r = score(_profile())
         assert "priority_reason" in r
         assert isinstance(r["priority_reason"], str)
+
+
+# ── New category base scores ──────────────────────────────────────
+class TestNewCategoryScores:
+    def test_service_dog_aligned_bonus(self):
+        """service_dog_aligned should get +35 bonus (highest)."""
+        r = score(_profile(category="service_dog_aligned"))
+        base = score(_profile(category="personal_passive"))
+        assert r["priority_score"] == base["priority_score"] + 35
+        assert "service_dog" in r["priority_reason"]
+
+    def test_corporate_bonus(self):
+        """corporate should get +25 bonus."""
+        r = score(_profile(category="corporate"))
+        base = score(_profile(category="personal_passive"))
+        assert r["priority_score"] == base["priority_score"] + 25
+        assert "corporate" in r["priority_reason"]
+
+
+# ── New engagement signals ────────────────────────────────────────
+class TestNewEngagementSignals:
+    def test_mission_alignment_bonus(self):
+        """Bio mentioning 'service dog' should get +10 mission bonus."""
+        aligned = score(_profile(bio="We support service dog programs"))
+        unaligned = score(_profile(bio="Just a regular bio"))
+        assert aligned["priority_score"] == unaligned["priority_score"] + 10
+        assert "mission_aligned" in aligned["priority_reason"]
+
+    def test_therapy_dog_mission_bonus(self):
+        """Bio mentioning 'therapy dog' should get +10 mission bonus."""
+        r = score(_profile(bio="Therapy dog handler and advocate"))
+        assert "mission_aligned" in r["priority_reason"]
+
+    def test_disability_mission_bonus(self):
+        """Bio mentioning 'disability' should get +10 mission bonus."""
+        r = score(_profile(bio="Disability advocacy and access"))
+        assert "mission_aligned" in r["priority_reason"]
+
+    def test_donor_language_bonus(self):
+        """Bio with 'sponsor' should get +5 donor language bonus."""
+        with_donor = score(_profile(bio="Proud sponsor of local events"))
+        without = score(_profile(bio="Just a regular bio"))
+        assert with_donor["priority_score"] == without["priority_score"] + 5
+        assert "donor_language" in with_donor["priority_reason"]
+
+    def test_support_local_bonus(self):
+        """Bio with 'support local' should get +5."""
+        r = score(_profile(bio="We support local businesses"))
+        assert "donor_language" in r["priority_reason"]
+
+    def test_give_back_bonus(self):
+        """Bio with 'give back' should get +5."""
+        r = score(_profile(bio="We love to give back to community"))
+        assert "donor_language" in r["priority_reason"]
+
+    def test_mission_no_stack_service_dog_category(self):
+        """service_dog_aligned category should NOT double-dip mission bonus."""
+        sda = score(_profile(category="service_dog_aligned",
+                             bio="Service dog training program"))
+        sda_no_bio = score(_profile(category="service_dog_aligned",
+                                     bio="Professional program"))
+        assert sda["priority_score"] == sda_no_bio["priority_score"]
+
+
+# ── Updated PRD examples for new categories ──────────────────────
+class TestNewPRDExamples:
+    def test_hawaii_service_dog_org(self):
+        """hawaii(30) + service_dog(35) + website(5) = 70 -> Tier 2"""
+        r = score(_profile(category="service_dog_aligned", is_hawaii=True,
+                           website="https://guidedogs.org",
+                           bio="Guide dog foundation"))
+        assert r["priority_score"] == 70
+
+    def test_hawaii_corporate_verified(self):
+        """hawaii(30) + corporate(25) + business(20) + verified(10) + reach(20) = 100 (clamped)"""
+        r = score(_profile(category="corporate", is_hawaii=True,
+                           is_business=True, is_verified=True,
+                           follower_count=60000, bio="Hawaii's utility"))
+        assert r["priority_score"] == 100
+
+
+# ── Business local/national category bonuses ─────────────────────
+class TestBusinessCategoryScores:
+    def test_business_local_bonus(self):
+        """business_local should get +20 bonus."""
+        r = score(_profile(category="business_local"))
+        base = score(_profile(category="personal_passive"))
+        assert r["priority_score"] == base["priority_score"] + 20
+        assert "local_biz(+20)" in r["priority_reason"]
+
+    def test_business_national_bonus(self):
+        """business_national should get +10 bonus."""
+        r = score(_profile(category="business_national"))
+        base = score(_profile(category="personal_passive"))
+        assert r["priority_score"] == base["priority_score"] + 10
+        assert "national_biz(+10)" in r["priority_reason"]
+
+
+# ── Charity partner scoring ──────────────────────────────────────
+class TestCharityPartnerScoring:
+    def test_charity_general_gets_penalty(self):
+        """charity/general should get -50 penalty."""
+        r = score(_profile(category="charity", subcategory="general", is_hawaii=True))
+        assert "charity(-50)" in r["priority_reason"]
+
+    def test_charity_partner_no_penalty(self):
+        """charity/partner should NOT get -50 penalty."""
+        r = score(_profile(category="charity", subcategory="partner", is_hawaii=True))
+        assert "charity(-50)" not in r["priority_reason"]
+
+    def test_charity_partner_hawaii_score(self):
+        """charity/partner + hawaii(30) → score 30 (no penalty)."""
+        r = score(_profile(category="charity", subcategory="partner", is_hawaii=True))
+        assert r["priority_score"] >= 30
+
+    def test_charity_general_hawaii_score(self):
+        """charity/general + hawaii(30) - charity(50) → clamped to 0."""
+        r = score(_profile(category="charity", subcategory="general",
+                           is_hawaii=True))
+        assert r["priority_score"] == 0
+
+
+# ── Pet breeder reduced scoring ──────────────────────────────────
+class TestBreederScoring:
+    def test_breeder_gets_reduced_bonus(self):
+        """pet_industry/breeder should get +10 (not +25)."""
+        r = score(_profile(category="pet_industry", subcategory="breeder"))
+        assert "pet_breeder(+10)" in r["priority_reason"]
+        assert "pet(+25)" not in r["priority_reason"]
+
+    def test_regular_pet_gets_full_bonus(self):
+        """pet_industry/veterinary should get +25."""
+        r = score(_profile(category="pet_industry", subcategory="veterinary"))
+        assert "pet(+25)" in r["priority_reason"]
+
+    def test_breeder_score_vs_regular_pet(self):
+        """Breeder should score 15 less than regular pet_industry."""
+        breeder = score(_profile(category="pet_industry", subcategory="breeder"))
+        regular = score(_profile(category="pet_industry", subcategory="veterinary"))
+        assert regular["priority_score"] - breeder["priority_score"] == 15
+
+
+# ── Veteran/military bonus ──────────────────────────────────────
+class TestVeteranBonus:
+    def test_veteran_bonus(self):
+        """Bio mentioning 'veteran' should get +5."""
+        with_vet = score(_profile(bio="Proud veteran and dog lover"))
+        without = score(_profile(bio="Just a regular person"))
+        assert with_vet["priority_score"] == without["priority_score"] + 15  # veteran(+5) + dogs_pets_bio(+10)
+        assert "veteran(+5)" in with_vet["priority_reason"]
+
+    def test_military_bonus(self):
+        """Bio mentioning 'military' should get +5."""
+        r = score(_profile(bio="Military family stationed in Hawaii"))
+        assert "veteran(+5)" in r["priority_reason"]
+
+    def test_armed_forces_bonus(self):
+        """Bio mentioning 'armed forces' should get +5."""
+        r = score(_profile(bio="Armed forces spouse"))
+        assert "veteran(+5)" in r["priority_reason"]
+
+
+# ── Dog community bio expansion ─────────────────────────────────
+class TestDogCommunityBioExpansion:
+    def test_dog_mom_bonus(self):
+        """Bio mentioning 'dog mom' should get dogs_pets_bio bonus."""
+        r = score(_profile(bio="Proud dog mom of 3"))
+        assert "dogs_pets_bio(+10)" in r["priority_reason"]
+
+    def test_dog_dad_bonus(self):
+        """Bio mentioning 'dog dad' should get dogs_pets_bio bonus."""
+        r = score(_profile(bio="Dog dad to a golden retriever"))
+        assert "dogs_pets_bio(+10)" in r["priority_reason"]
+
+    def test_fur_parent_bonus(self):
+        """Bio mentioning 'fur parent' should get dogs_pets_bio bonus."""
+        r = score(_profile(bio="Fur parent and coffee lover"))
+        assert "dogs_pets_bio(+10)" in r["priority_reason"]
+
+    def test_pup_parent_bonus(self):
+        """Bio mentioning 'pup parent' should get dogs_pets_bio bonus."""
+        r = score(_profile(bio="Pup parent | Hawaii life"))
+        assert "dogs_pets_bio(+10)" in r["priority_reason"]

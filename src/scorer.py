@@ -11,6 +11,7 @@ def score(profile):
     reasons = []
 
     category = profile.get("category", "")
+    subcategory = profile.get("subcategory", "")
     is_hawaii = bool(profile.get("is_hawaii"))
     is_business = bool(profile.get("is_business"))
     is_verified = bool(profile.get("is_verified"))
@@ -25,9 +26,18 @@ def score(profile):
         total += 30
         reasons.append("hawaii(+30)")
 
-    if category == "bank_financial":
+    if category == "service_dog_aligned":
+        total += 35
+        reasons.append("service_dog(+35)")
+    elif category == "bank_financial":
         total += 30
         reasons.append("bank(+30)")
+    elif category == "corporate":
+        total += 25
+        reasons.append("corporate(+25)")
+    elif category == "pet_industry" and subcategory == "breeder":
+        total += 10
+        reasons.append("pet_breeder(+10)")
     elif category == "pet_industry":
         total += 25
         reasons.append("pet(+25)")
@@ -37,6 +47,12 @@ def score(profile):
     elif category == "elected_official":
         total += 25
         reasons.append("elected(+25)")
+    elif category == "business_local":
+        total += 20
+        reasons.append("local_biz(+20)")
+    elif category == "business_national":
+        total += 10
+        reasons.append("national_biz(+10)")
     elif category == "influencer":
         total += 20
         reasons.append("influencer(+20)")
@@ -75,9 +91,19 @@ def score(profile):
         total += 5
         reasons.append("active_posting(+5)")
 
-    # Dogs/pets bio bonus — NO-STACK with pet_industry
     bio_lower = bio.lower()
-    if category != "pet_industry" and re.search(r'\b(dogs?|pets?)\b', bio_lower):
+
+    # Mission alignment bio bonus — NO-STACK with service_dog_aligned category
+    has_mission = (category != "service_dog_aligned"
+                   and re.search(r'\b(service\s+dog|therapy\s+dog|assistance|disability)\b', bio_lower))
+    if has_mission:
+        total += 10
+        reasons.append("mission_aligned(+10)")
+
+    # Dogs/pets bio bonus — NO-STACK with pet_industry, service_dog_aligned, and mission_aligned
+    if (category not in ("pet_industry", "service_dog_aligned")
+            and not has_mission
+            and re.search(r'\b(dogs?|pets?|dog\s+mom|dog\s+dad|fur\s+parent|pup\s+parent)\b', bio_lower)):
         total += 10
         reasons.append("dogs_pets_bio(+10)")
 
@@ -85,8 +111,18 @@ def score(profile):
         total += 5
         reasons.append("community_giving(+5)")
 
+    # Veteran/military bonus — potential partnership signal
+    if re.search(r'\b(veterans?|military|armed forces)\b', bio_lower):
+        total += 5
+        reasons.append("veteran(+5)")
+
+    # Donor language bio bonus
+    if re.search(r'\b(sponsor|partner(?:ship)?|support\s+local|give\s+back|philanthrop|donate|fundrais)\b', bio_lower):
+        total += 5
+        reasons.append("donor_language(+5)")
+
     # ── Penalties ──────────────────────────────────────────────────
-    if category == "charity":
+    if category == "charity" and subcategory != "partner":
         total -= 50
         reasons.append("charity(-50)")
 
