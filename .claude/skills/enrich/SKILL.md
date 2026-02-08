@@ -5,6 +5,11 @@ description: Enrich all Instagram followers in the database by visiting each pro
 
 # Instagram Profile Enrichment Skill
 
+## Recommended: Standalone Script for Bulk Runs
+For processing all remaining followers (AFK overnight), use the standalone script
+instead of this skill. See `scripts/enrich.py --help` for usage.
+This skill is still useful for small batches or interactive enrichment.
+
 ## Description
 Enrich all Instagram followers in the database by visiting each profile via browser automation, extracting profile data, classifying, scoring, and storing results. Designed to run fully autonomously with crash recovery.
 
