@@ -336,9 +336,14 @@ def test_handle_808_prefix():
     assert is_hawaii("808camo Oahu based camo prints") is True
 
 
-def test_handle_hawaii_in_middle():
-    """'cshawaiianimalfoundation' → 'hawaii' embedded in handle."""
-    assert is_hawaii("cshawaiianimalfoundation") is True
+def test_handle_hawaiian_in_middle():
+    """'cshawaiianimalfoundation' → 'hawaiian' extracted, plus bio signals."""
+    assert is_hawaii("cshawaiianimalfoundation Aloha animal foundation") is True
+
+
+def test_handle_hawaiian_in_middle_confidence():
+    """'hawaiian' extracted from handle should give at least 0.3."""
+    assert hawaii_confidence("cshawaiianimalfoundation") >= 0.3
 
 
 def test_handle_kaetyhawaii():
