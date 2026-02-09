@@ -209,7 +209,7 @@ class TestWriteUpdatedValues:
     def test_updates_priority_score(self, tmp_path):
         """Rescore writes new priority_score to the database."""
         db_path = _create_db(tmp_path, rows=[
-            {"handle": "bank_hi", "bio": "First Hawaiian Bank",
+            {"handle": "bank_hi", "bio": "First Hawaiian Bank Honolulu",
              "is_business": True, "is_hawaii": True,
              "category": "personal_passive", "subcategory": "general",
              "confidence": 0.5, "priority_score": 0, "priority_reason": "",
@@ -223,7 +223,7 @@ class TestWriteUpdatedValues:
     def test_updates_priority_reason(self, tmp_path):
         """Rescore writes new priority_reason to the database."""
         db_path = _create_db(tmp_path, rows=[
-            {"handle": "bank_hi", "bio": "First Hawaiian Bank",
+            {"handle": "bank_hi", "bio": "First Hawaiian Bank Honolulu",
              "is_business": True, "is_hawaii": True,
              "category": "personal_passive", "subcategory": "general",
              "confidence": 0.5, "priority_score": 0, "priority_reason": "",
@@ -559,7 +559,7 @@ class TestNoneOldScore:
     def test_none_old_score_tier_shows_na(self, tmp_path, capsys):
         """When old_score is None, old_tier should show 'N/A' in the report."""
         db_path = _create_db(tmp_path, rows=[
-            {"handle": "na_tier_user", "bio": "First Hawaiian Bank",
+            {"handle": "na_tier_user", "bio": "First Hawaiian Bank Honolulu",
              "is_business": True, "is_hawaii": True,
              "category": "unknown", "subcategory": "general",
              "confidence": 0.3, "priority_score": None, "priority_reason": None,

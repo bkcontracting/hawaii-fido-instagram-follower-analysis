@@ -892,3 +892,149 @@ class TestRaceMarathonKeywords:
         r = classify(_profile(bio="Kona Ironman Triathlon"))
         assert r["category"] == "media_event"
         assert r["subcategory"] == "event"
+
+
+# ── Fix 2: Service dog false positive guard ──────────────────────
+class TestServiceDogFalsePositiveGuard:
+    def test_full_service_dog_grooming_not_service_dog(self):
+        """'Full service Dog Grooming' should NOT trigger service_dog_aligned."""
+        r = classify(_profile(handle="doggyboxhawaii",
+                              display_name="Doggy Box",
+                              bio="Full service Dog Grooming Salon",
+                              is_business=True, is_hawaii=True))
+        assert r["category"] != "service_dog_aligned"
+
+    def test_service_dogs_in_highlight_text(self):
+        """'Service dogs' mentioned in bio text should still match."""
+        r = classify(_profile(bio="We train service dogs for veterans"))
+        assert r["category"] == "service_dog_aligned"
+
+    def test_servicedog_compound_in_handle(self):
+        """'arya.the.servicedog' — compound handle should match service_dog."""
+        r = classify(_profile(handle="arya.the.servicedog",
+                              bio="Service dog in training",
+                              post_count=80))
+        assert r["category"] == "service_dog_aligned"
+
+
+# ── Fix 3: SPCA in strong charity keywords ──────────────────────
+class TestSPCACharity:
+    def test_oahu_spca_is_charity_not_media(self):
+        """the_oahu_spca should be charity (partner), not media_event."""
+        r = classify(_profile(handle="the_oahu_spca",
+                              display_name="The Oahu SPCA",
+                              bio="Rescue events and adoption programs",
+                              is_business=False, is_hawaii=True))
+        assert r["category"] == "charity"
+        assert r["subcategory"] == "partner"
+
+
+# ── Fix 4: Nonprofit guard for pet_industry ─────────────────────
+class TestNonprofitGuardPetIndustry:
+    def test_k9_nonprofit_is_charity_not_pet(self):
+        """k9kokua is a nonprofit — should be charity, not pet_industry."""
+        r = classify(_profile(handle="k9kokua",
+                              display_name="K9 Kokua",
+                              bio="Nonprofit helping dogs and their people"))
+        assert r["category"] == "charity"
+
+    def test_501c_pet_org_is_charity(self):
+        """501c3 pet organization should be charity, not pet_industry."""
+        r = classify(_profile(bio="501c3 animal rescue and kennel services"))
+        assert r["category"] == "charity"
+
+    def test_regular_k9_still_pet_industry(self):
+        """K9 without nonprofit signal should still be pet_industry."""
+        r = classify(_profile(handle="k9training",
+                              bio="K9 training and boarding",
+                              is_business=True))
+        assert r["category"] == "pet_industry"
+
+
+# ── Fix 5: Financial keyword refinement ─────────────────────────
+class TestFinancialKeywordRefinement:
+    def test_forex_trader_not_bank_financial(self):
+        """'Financial Markets' (forex) should NOT trigger bank_financial."""
+        r = classify(_profile(handle="katiefx.tips",
+                              display_name="Katie FX",
+                              bio="Financial Markets | Forex Trading",
+                              post_count=80))
+        assert r["category"] != "bank_financial"
+
+    def test_financial_services_still_bank(self):
+        """'Financial Services' should still trigger bank_financial."""
+        r = classify(_profile(bio="ABC Financial Services"))
+        assert r["category"] == "bank_financial"
+
+    def test_financial_advisor_still_bank(self):
+        """'Financial advisor' should still trigger bank_financial."""
+        r = classify(_profile(bio="Financial advisor serving Hawaii"))
+        assert r["category"] == "bank_financial"
+
+    def test_financial_planning_still_bank(self):
+        """'Financial planning' should still trigger bank_financial."""
+        r = classify(_profile(bio="Financial planning for families"))
+        assert r["category"] == "bank_financial"
+
+
+# ── Fix 6: media_event "event" keyword guard ────────────────────
+class TestMediaEventGuard:
+    def test_hawaii_business_with_event_is_business_local(self):
+        """Hawaii business with only 'event' media keyword → business_local."""
+        r = classify(_profile(handle="pono_shell_creations",
+                              bio="Shell jewelry and crafts. Upcoming event this weekend!",
+                              is_business=True, is_hawaii=True))
+        assert r["category"] == "business_local"
+
+    def test_hawaii_craft_shop_with_events(self):
+        """Hawaii craft shop with 'events' → business_local, not media_event."""
+        r = classify(_profile(handle="toffeecraftshawaii",
+                              bio="Handmade crafts and accessories. Events at our Kailua store",
+                              is_business=True, is_hawaii=True))
+        assert r["category"] == "business_local"
+
+    def test_nonprofit_with_event_is_charity(self):
+        """Nonprofit with 'event' → charity, not media_event."""
+        r = classify(_profile(handle="relei808",
+                              bio="Nonprofit organization. Annual fundraising event",
+                              is_business=False, is_hawaii=True))
+        assert r["category"] == "charity"
+
+    def test_real_media_event_still_works(self):
+        """Account with strong media keywords should still be media_event."""
+        r = classify(_profile(bio="Event photographer and media coverage"))
+        assert r["category"] == "media_event"
+
+    def test_tournament_still_media(self):
+        """'Tournament' is a strong media signal, not just 'event'."""
+        r = classify(_profile(bio="Annual surf tournament"))
+        assert r["category"] == "media_event"
+
+
+# ── Fix 7: CO commercial signal false positive ──────────────────
+class TestCOCommercialSignal:
+    def test_co_with_period_is_commercial(self):
+        """'Brewing Co.' with period should still be commercial."""
+        r = classify(_profile(bio="Hawaii pet supply Co. store"))
+        assert r["category"] == "pet_industry"
+
+    def test_co_state_abbreviation_not_commercial(self):
+        """'CO' as state abbreviation should NOT trigger commercial signal."""
+        # A pet-related handle with "CO" in bio shouldn't get commercial signal
+        from src.classifier import _has_commercial_signal
+        assert not _has_commercial_signal("based in co serving colorado")
+
+
+# ── Fix 8: Facility dog keyword ─────────────────────────────────
+class TestFacilityDogKeyword:
+    def test_facility_dog_is_service_dog_aligned(self):
+        """'Facility dog' should trigger service_dog_aligned."""
+        r = classify(_profile(handle="caninepartnersoftherockies",
+                              bio="Service & Facility Dogs for people with disabilities"))
+        assert r["category"] == "service_dog_aligned"
+
+    def test_facility_dog_subcategory(self):
+        """'Facility dog' should have 'facility' subcategory."""
+        r = classify(_profile(bio="Certified facility dog program"))
+        assert r["category"] == "service_dog_aligned"
+        assert r["subcategory"] == "facility"

@@ -14,7 +14,11 @@ _WEAK_WEIGHT = 0.15
 # Weak signals — checked first so "Hawaiian" is consumed before "Hawaii"
 _WEAK_SIGNALS = [
     (re.compile(r'\baloha\b', re.IGNORECASE), _WEAK_WEIGHT),
-    (re.compile(r'\bhawaiian\b', re.IGNORECASE), _WEAK_WEIGHT),
+]
+
+# "Hawaiian" is a medium signal — it strongly implies Hawaii
+_HAWAIIAN_SIGNALS = [
+    (re.compile(r'\bhawaiian\b', re.IGNORECASE), _MEDIUM_WEIGHT),
 ]
 
 # Strong signals — cities
@@ -63,13 +67,103 @@ _MEDIUM_OTHER_SIGNALS = [
 ]
 
 # All signal groups in evaluation order
+# "Hawaiian" is checked before strong state signals so the substring is
+# consumed and not re-matched by the "hawaii" pattern.
 _ALL_SIGNAL_GROUPS = [
     _WEAK_SIGNALS,
+    _HAWAIIAN_SIGNALS,
     _STRONG_CITY_SIGNALS,
     _STRONG_STATE_SIGNALS,
     _MEDIUM_ISLAND_SIGNALS,
     _MEDIUM_OTHER_SIGNALS,
 ]
+
+
+# Known Hawaii terms to look for when splitting concatenated handle words.
+# Order matters: longer/more-specific terms first to avoid partial matches
+# (e.g. "hawaiian" before "hawaii", "honolulu" before shorter terms).
+_HAWAII_TERMS_FOR_SPLIT = [
+    "hawaiian", "hawaii", "honolulu", "kailua", "kapolei", "aiea",
+    "kaneohe", "waipahu", "mililani", "waikiki", "hilo", "lahaina",
+    "kona", "oahu", "maui", "kauai", "molokai", "lanai", "808",
+]
+
+
+def _inject_hawaii_spaces(text: str) -> str:
+    """Insert spaces around known Hawaii terms embedded in concatenated words.
+
+    For each known term, if it appears as a substring without a space boundary
+    on at least one side, insert spaces around it. Once a term is isolated,
+    shorter terms that are substrings of it (e.g. "hawaii" inside "hawaiian")
+    are skipped.
+
+    >>> _inject_hawaii_spaces("doggyboxhawaii")
+    'doggybox hawaii'
+    >>> _inject_hawaii_spaces("oahudogtraining")
+    'oahu dogtraining'
+    """
+    result = text.lower()
+    # Track which character positions have already been claimed by a term
+    # so shorter terms don't re-split longer ones.
+    claimed = set()
+    for term in _HAWAII_TERMS_FOR_SPLIT:
+        idx = result.find(term)
+        if idx == -1:
+            continue
+        # Skip if this position overlaps with an already-claimed longer term
+        term_positions = set(range(idx, idx + len(term)))
+        if term_positions & claimed:
+            continue
+        before = idx > 0 and result[idx - 1] not in (' ', '\t', '\n')
+        after = (idx + len(term)) < len(result) and result[idx + len(term)] not in (' ', '\t', '\n')
+        if before or after:
+            # Insert spaces and recalculate position
+            new_result = result[:idx] + ' ' + term + ' ' + result[idx + len(term):]
+            # Adjust claimed positions for the offset (2 spaces added)
+            offset = len(new_result) - len(result)
+            claimed = {p + offset if p >= idx else p for p in claimed}
+            # Claim the new position of this term (after the space)
+            new_idx = idx + 1  # +1 for the space we inserted before
+            claimed.update(range(new_idx, new_idx + len(term)))
+            result = new_result
+        else:
+            # Already has spaces; claim the positions
+            claimed.update(range(idx, idx + len(term)))
+    return result
+
+
+def _normalize_for_search(text: str) -> str:
+    """Pre-process text so Hawaii terms embedded in handles become searchable.
+
+    Splits on common IG handle separators (``_``, ``.``), camelCase boundaries,
+    digit-to-letter / letter-to-digit transitions, and known Hawaii terms
+    embedded in concatenated words, inserting spaces so that ``\\b`` word
+    boundaries in the signal regexes can match.
+
+    >>> _normalize_for_search("doggyboxhawaii")
+    'doggyboxhawaii doggybox hawaii'
+    """
+    if not text:
+        return text
+
+    # Step 1: split on _ and .
+    expanded = re.sub(r'[_.]', ' ', text)
+
+    # Step 2: split camelCase  (e.g. "DoggyBox" → "Doggy Box")
+    expanded = re.sub(r'([a-z])([A-Z])', r'\1 \2', expanded)
+
+    # Step 3: split digit↔letter transitions (e.g. "808camo" → "808 camo")
+    expanded = re.sub(r'(\d)([A-Za-z])', r'\1 \2', expanded)
+    expanded = re.sub(r'([A-Za-z])(\d)', r'\1 \2', expanded)
+
+    # Step 4: inject spaces around known Hawaii terms in concatenated words
+    expanded = _inject_hawaii_spaces(expanded)
+
+    # Collapse multiple spaces
+    expanded = re.sub(r' +', ' ', expanded).strip()
+
+    # Append the expanded form so original text is still searchable too
+    return text + " " + expanded
 
 
 def hawaii_confidence(text: str) -> float:
@@ -84,8 +178,13 @@ def hawaii_confidence(text: str) -> float:
     if not text:
         return 0.0
 
+    # Normalize handles so embedded Hawaii terms get word boundaries.
+    # Also strip okina variants so "O'ahu" → "Oahu", "Hawai'i" → "Hawaii".
+    text = re.sub(r"['\u02BB]", "", text)
+    text = _normalize_for_search(text)
+
     # Work on a copy we can mask consumed spans from so that, e.g.,
-    # "Hawaiian" is matched as a weak signal and the substring is not
+    # "Hawaiian" is matched as a medium signal and the substring is not
     # re-matched by the strong "hawaii" pattern.
     remaining = text
     total = 0.0

@@ -18,9 +18,11 @@ def load_json(filepath: str) -> List[Dict[str, Any]]:
     with open(filepath, "r") as f:
         data = json.load(f)
 
-    # Handle wrapped format {"top_50_fundraising": [...]} or {"top_15_marketing_partners": [...]}
+    # Handle wrapped format {"top_25_fundraising": [...]} or {"top_15_marketing_partners": [...]}
     if isinstance(data, dict):
-        if "top_50_fundraising" in data:
+        if "top_25_fundraising" in data:
+            return data["top_25_fundraising"]
+        elif "top_50_fundraising" in data:
             return data["top_50_fundraising"]
         elif "top_15_marketing_partners" in data:
             return data["top_15_marketing_partners"]
@@ -36,23 +38,24 @@ def load_json(filepath: str) -> List[Dict[str, Any]]:
 
 
 def format_fundraising_recommendations(
-    top_50: List[Dict[str, Any]],
+    top_25: List[Dict[str, Any]],
     top_15: List[Dict[str, Any]],
     output_path: str
 ) -> None:
     """Format all analysis into comprehensive markdown report.
 
-    Includes all data from both top 50 fundraising and top 15 marketing partners.
+    Includes all data from both top 25 fundraising and top 15 marketing partners.
     """
     with open(output_path, "w") as f:
         f.write("# Hawaii FIDO Fundraising & Marketing Analysis\n\n")
-        f.write("> AI-driven analysis of 331+ Instagram followers for fundraising prospects\n\n")
+        f.write("> AI-driven analysis of 444 Instagram followers for fundraising prospects\n")
+        f.write("> Scoring: Financial Capacity (40%) + Donor Access (25%) + Dinner Potential (20%) + Hawaii Connection (15%)\n\n")
 
-        # Top 50 Fundraising Candidates
-        f.write("## Top 50 Fundraising Candidates\n\n")
-        f.write("High-value prospects for direct fundraising outreach, partnership opportunities, and strategic relationships.\n\n")
+        # Top 25 Fundraising Candidates
+        f.write("## Top 25 Fundraising Prospects\n\n")
+        f.write("High-value prospects for direct fundraising outreach. Ranked by fundraising capacity - ability to write checks, buy tables, and open doors to other donors.\n\n")
 
-        for i, candidate in enumerate(top_50, 1):
+        for i, candidate in enumerate(top_25, 1):
             f.write(f"### {i}. {candidate.get('display_name', candidate.get('handle'))}\n\n")
             f.write(f"**Handle**: @{candidate['handle']}\n\n")
 
@@ -62,7 +65,6 @@ def format_fundraising_recommendations(
             following = candidate.get('following_count') or candidate.get('following', 'N/A')
             posts = candidate.get('post_count') or candidate.get('posts', 'N/A')
 
-            # Format numbers with commas if they're numeric
             if isinstance(followers, int):
                 f.write(f"- **Followers**: {followers:,}\n")
             else:
@@ -84,26 +86,33 @@ def format_fundraising_recommendations(
                 f.write(f"- **Website**: {candidate['website']}\n")
             f.write(f"- **Bio**: {candidate.get('bio', 'N/A')}\n\n")
 
-            # AI Analysis
+            # AI Analysis - New 4-factor scoring
             f.write("#### AI Analysis\n")
             f.write(f"- **Hawaii-Based**: {'Yes' if candidate.get('hawaii_based') else 'No'}\n")
             f.write(f"- **Entity Type**: {candidate.get('entity_type', 'N/A')}\n")
-            f.write(f"- **Business Capacity**: {candidate.get('capacity', 'UNKNOWN')}\n")
-            f.write(f"- **Strategic Alignment**: {candidate.get('alignment', 'UNKNOWN')}\n")
-            f.write(f"- **Relationship Potential**: {candidate.get('relationship', 'UNKNOWN')}\n")
-            f.write(f"- **Impact Potential**: {candidate.get('impact', 'UNKNOWN')}\n")
-            f.write(f"- **Fundraising Score**: {candidate.get('score', 0)}/100\n")
-            f.write(f"- **Recommended Outreach**: {candidate.get('outreach_type', 'UNKNOWN')}\n\n")
+            f.write(f"- **Financial Capacity**: {candidate.get('financial_capacity', 'N/A')}/40\n")
+            f.write(f"- **Donor Access Multiplier**: {candidate.get('donor_access', 'N/A')}/25\n")
+            f.write(f"- **Dinner Ticket/Table Potential**: {candidate.get('dinner_potential', 'N/A')}/20\n")
+            f.write(f"- **Hawaii Connection**: {candidate.get('hawaii_connection', 'N/A')}/15\n")
+            f.write(f"- **Total Fundraising Score**: {candidate.get('score', 0)}/100\n")
+            if candidate.get("score_breakdown"):
+                f.write(f"- **Score Breakdown**: {candidate['score_breakdown']}\n")
+            f.write(f"- **Outreach Type**: {candidate.get('outreach_type', 'N/A')}\n")
+            if candidate.get("suggested_ask_amount"):
+                f.write(f"- **Suggested Ask**: {candidate['suggested_ask_amount']}\n")
+            f.write("\n")
 
             # Reasoning
             if candidate.get("reasoning_hawaii"):
                 f.write(f"**Hawaii Connection**: {candidate['reasoning_hawaii']}\n\n")
-            if candidate.get("reasoning_capacity"):
-                f.write(f"**Capacity**: {candidate['reasoning_capacity']}\n\n")
-            if candidate.get("reasoning_alignment"):
-                f.write(f"**Alignment**: {candidate['reasoning_alignment']}\n\n")
-            if candidate.get("reasoning_impact"):
-                f.write(f"**Impact**: {candidate['reasoning_impact']}\n\n")
+            if candidate.get("financial_capacity_reasoning"):
+                f.write(f"**Financial Capacity**: {candidate['financial_capacity_reasoning']}\n\n")
+            if candidate.get("donor_access_reasoning"):
+                f.write(f"**Donor Access**: {candidate['donor_access_reasoning']}\n\n")
+            if candidate.get("dinner_potential_reasoning"):
+                f.write(f"**Dinner Potential**: {candidate['dinner_potential_reasoning']}\n\n")
+            if candidate.get("hawaii_connection_reasoning"):
+                f.write(f"**Hawaii Connection Detail**: {candidate['hawaii_connection_reasoning']}\n\n")
             if candidate.get("outreach_strategy"):
                 f.write(f"**Outreach Strategy**: {candidate['outreach_strategy']}\n\n")
 
@@ -123,7 +132,6 @@ def format_fundraising_recommendations(
             following = partner.get('following_count') or partner.get('following', 'N/A')
             posts = partner.get('post_count') or partner.get('posts', 'N/A')
 
-            # Format numbers with commas if they're numeric
             if isinstance(followers, int):
                 f.write(f"- **Followers**: {followers:,}\n")
             else:
@@ -163,10 +171,10 @@ def format_fundraising_recommendations(
 
 
 def format_fundraising_outreach_csv(
-    top_50: List[Dict[str, Any]],
+    top_25: List[Dict[str, Any]],
     output_path: str
 ) -> None:
-    """Format top 50 fundraising candidates as CSV for outreach."""
+    """Format top 25 fundraising candidates as CSV for outreach."""
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", newline="") as f:
@@ -177,15 +185,19 @@ def format_fundraising_outreach_csv(
             "Followers",
             "Entity Type",
             "Hawaii-Based",
-            "Capacity",
-            "Score",
+            "Financial Capacity",
+            "Donor Access",
+            "Dinner Potential",
+            "Hawaii Connection",
+            "Total Score",
             "Outreach Type",
+            "Suggested Ask",
             "Website",
             "Bio",
         ])
         writer.writeheader()
 
-        for i, candidate in enumerate(top_50, 1):
+        for i, candidate in enumerate(top_25, 1):
             writer.writerow({
                 "Rank": i,
                 "Handle": candidate.get("handle", ""),
@@ -193,9 +205,13 @@ def format_fundraising_outreach_csv(
                 "Followers": candidate.get("follower_count", ""),
                 "Entity Type": candidate.get("entity_type", ""),
                 "Hawaii-Based": "Yes" if candidate.get("hawaii_based") else "No",
-                "Capacity": candidate.get("capacity", ""),
-                "Score": candidate.get("score", ""),
+                "Financial Capacity": candidate.get("financial_capacity", ""),
+                "Donor Access": candidate.get("donor_access", ""),
+                "Dinner Potential": candidate.get("dinner_potential", ""),
+                "Hawaii Connection": candidate.get("hawaii_connection", ""),
+                "Total Score": candidate.get("score", ""),
                 "Outreach Type": candidate.get("outreach_type", ""),
+                "Suggested Ask": candidate.get("suggested_ask_amount", ""),
                 "Website": candidate.get("website", ""),
                 "Bio": candidate.get("bio", ""),
             })
@@ -245,11 +261,11 @@ def format_reports(
 ) -> None:
     """Format all Claude analysis results into reports."""
     print("Loading analysis results...")
-    top_50 = load_json(fundraising_json)
+    top_25 = load_json(fundraising_json)
     top_15 = load_json(marketing_json)
 
-    print(f"Formatting {len(top_50)} fundraising candidates...")
-    format_fundraising_outreach_csv(top_50, csv_outreach)
+    print(f"Formatting {len(top_25)} fundraising candidates...")
+    format_fundraising_outreach_csv(top_25, csv_outreach)
     print(f"✓ Saved to {csv_outreach}")
 
     print(f"Formatting {len(top_15)} marketing partners...")
@@ -257,7 +273,7 @@ def format_reports(
     print(f"✓ Saved to {csv_marketing}")
 
     print("Formatting comprehensive markdown report...")
-    format_fundraising_recommendations(top_50, top_15, md_output)
+    format_fundraising_recommendations(top_25, top_15, md_output)
     print(f"✓ Saved to {md_output}")
 
     print("\n✓ All reports formatted successfully!")
@@ -266,16 +282,22 @@ def format_reports(
 if __name__ == "__main__":
     base_path = Path(__file__).parent.parent
 
-    fundraising_json = base_path / "data" / "top_50_fundraising.json"
+    fundraising_json = base_path / "data" / "top_25_fundraising.json"
     marketing_json = base_path / "data" / "top_15_marketing_partners.json"
     md_output = base_path / "output" / "fundraising_recommendations.md"
     csv_outreach = base_path / "output" / "fundraising_outreach.csv"
     csv_marketing = base_path / "output" / "marketing_partners.csv"
 
-    # Check that input files exist
+    # Fall back to old filename if new one doesn't exist yet
     if not fundraising_json.exists():
-        print(f"Error: {fundraising_json} not found")
-        exit(1)
+        old_fundraising = base_path / "data" / "top_50_fundraising.json"
+        if old_fundraising.exists():
+            print(f"Note: {fundraising_json} not found, falling back to {old_fundraising}")
+            fundraising_json = old_fundraising
+        else:
+            print(f"Error: {fundraising_json} not found")
+            exit(1)
+
     if not marketing_json.exists():
         print(f"Error: {marketing_json} not found")
         exit(1)

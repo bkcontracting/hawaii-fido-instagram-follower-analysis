@@ -139,7 +139,7 @@ def test_confidence_aloha():
 
 
 def test_confidence_hawaiian():
-    assert hawaii_confidence("Hawaiian") == 0.15
+    assert hawaii_confidence("Hawaiian") == 0.3
 
 
 # ── hawaii_confidence: combined signals ─────────────────────────────
@@ -259,11 +259,11 @@ def test_confidence_no_double_count_city():
 
 # ── hawaii_confidence: hawaiian does not trigger hawaii ─────────────
 
-def test_confidence_hawaiian_is_weak_only():
-    """'Hawaiian' should only trigger the weak signal, not the strong 'Hawaii' signal.
-    The word 'Hawaiian' is specifically a weak signal worth 0.15."""
+def test_confidence_hawaiian_is_medium_only():
+    """'Hawaiian' should only trigger the medium signal, not the strong 'Hawaii' signal.
+    The word 'Hawaiian' is a medium signal worth 0.3 (boosted from 0.15)."""
     result = hawaii_confidence("Hawaiian")
-    assert result == 0.15
+    assert result == 0.3
 
 
 # ── is_hawaii: threshold tests ──────────────────────────────────────
@@ -302,3 +302,80 @@ def test_is_hawaii_city_and_state():
 
 def test_is_hawaii_random_text():
     assert is_hawaii("Just a regular bio about cats") is False
+
+
+# ── Handle-embedded Hawaii term detection ────────────────────────────
+
+def test_handle_hawaii_at_end():
+    """'doggyboxhawaii' → 'hawaii' embedded in handle should be detected."""
+    assert is_hawaii("doggyboxhawaii Doggy Box Grooming Salon") is True
+
+
+def test_handle_oahu_at_start():
+    """'oahudogtraining' → 'oahu' embedded in handle + aloha in bio."""
+    assert is_hawaii("oahudogtraining O'ahu Dog Training Aloha") is True
+
+
+def test_handle_oahu_confidence():
+    """'oahu' alone from handle should give at least 0.3."""
+    assert hawaii_confidence("oahudogtraining") >= 0.3
+
+
+def test_handle_kauai_after_underscore():
+    """'tikidawg_kauai' → 'kauai' after underscore + aloha in bio."""
+    assert is_hawaii("tikidawg_kauai Tiki Pet Collars Aloha from Kauai") is True
+
+
+def test_handle_kauai_confidence():
+    """'kauai' from handle split should give at least 0.3."""
+    assert hawaii_confidence("tikidawg_kauai") >= 0.3
+
+
+def test_handle_808_prefix():
+    """'808camo' → '808' at start of handle."""
+    assert is_hawaii("808camo Oahu based camo prints") is True
+
+
+def test_handle_hawaii_in_middle():
+    """'cshawaiianimalfoundation' → 'hawaii' embedded in handle."""
+    assert is_hawaii("cshawaiianimalfoundation") is True
+
+
+def test_handle_kaetyhawaii():
+    """'kaetyhawaii' → 'hawaii' embedded in handle."""
+    assert is_hawaii("kaetyhawaii Kaety Hawaii Oahu") is True
+
+
+def test_handle_hawaiijobcorps():
+    """'hawaiijobcorps' → 'hawaii' embedded in handle."""
+    assert is_hawaii("hawaiijobcorps Hawaii Job Corps") is True
+
+
+def test_handle_shinnyolanternfloatinghawaii():
+    """'shinnyolanternfloatinghawaii' → 'hawaii' at end."""
+    assert is_hawaii("shinnyolanternfloatinghawaii") is True
+
+
+# ── "Hawaiian" boosted to medium weight (0.3) ───────────────────────
+
+def test_hawaiian_now_medium_weight():
+    """'Hawaiian' should now be a medium signal (0.3), meeting threshold."""
+    result = hawaii_confidence("Hawaiian")
+    assert result == 0.3
+
+
+def test_hawaiian_electric_is_hawaii():
+    """'hawaiianelectric' with 'Hawaiian Electric' in display name."""
+    assert is_hawaii("hawaiianelectric Hawaiian Electric") is True
+
+
+def test_hawaiian_alone_meets_threshold():
+    """A single 'Hawaiian' should now meet the 0.4 threshold? No — 0.3.
+    But with handle normalization 'hawaiianelectric' splits to 'hawaiian electric'
+    so 'hawaiian' (0.3) alone does not meet 0.4 threshold."""
+    assert is_hawaii("Hawaiian") is False
+
+
+def test_hawaiian_plus_any_signal_meets_threshold():
+    """'Hawaiian' (0.3) + 'Aloha' (0.15) = 0.45, meets threshold."""
+    assert is_hawaii("Aloha Hawaiian") is True

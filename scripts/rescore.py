@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.classifier import classify
 from src.scorer import score, get_tier
+from src.location_detector import is_hawaii as detect_hawaii
 
 
 def _connect(db_path):
@@ -42,6 +43,18 @@ def rescore(db_path, dry_run=False):
             profile = dict(row)
             old_cat = profile.get("category")
             old_score = profile.get("priority_score")
+            old_hawaii = bool(profile.get("is_hawaii"))
+
+            # Re-detect Hawaii from handle + display_name + bio
+            location_text = " ".join(filter(None, [
+                profile.get("handle"),
+                profile.get("display_name"),
+                profile.get("bio"),
+            ]))
+            new_hawaii = detect_hawaii(location_text)
+
+            # Update profile with recalculated is_hawaii for classification
+            profile["is_hawaii"] = new_hawaii
 
             # Re-classify
             result = classify(profile)
@@ -49,19 +62,21 @@ def rescore(db_path, dry_run=False):
             new_subcat = result["subcategory"]
             new_conf = result["confidence"]
 
-            # Re-score with new category and subcategory
+            # Re-score with new category, subcategory, and is_hawaii
             score_profile = dict(profile)
             score_profile["category"] = new_cat
             score_profile["subcategory"] = new_subcat
+            score_profile["is_hawaii"] = new_hawaii
             score_result = score(score_profile)
             new_score = score_result["priority_score"]
             new_reason = score_result["priority_reason"]
 
             cat_changed = old_cat != new_cat
+            hawaii_changed = old_hawaii != new_hawaii
             score_delta = (new_score - old_score) if old_score is not None else None
             big_score_change = score_delta is not None and abs(score_delta) > 10
 
-            if cat_changed or big_score_change:
+            if cat_changed or big_score_change or hawaii_changed:
                 old_tier = get_tier(old_score) if old_score is not None else "N/A"
                 new_tier = get_tier(new_score)
                 changes.append({
@@ -73,16 +88,20 @@ def rescore(db_path, dry_run=False):
                     "score_delta": score_delta,
                     "old_tier": old_tier,
                     "new_tier": new_tier,
+                    "hawaii_changed": hawaii_changed,
+                    "old_hawaii": old_hawaii,
+                    "new_hawaii": new_hawaii,
                 })
 
             if not dry_run:
                 conn.execute(
                     """UPDATE followers
                        SET category = ?, subcategory = ?, confidence = ?,
-                           priority_score = ?, priority_reason = ?
+                           priority_score = ?, priority_reason = ?,
+                           is_hawaii = ?
                        WHERE handle = ?""",
                     (new_cat, new_subcat, new_conf, new_score, new_reason,
-                     profile["handle"]),
+                     int(new_hawaii), profile["handle"]),
                 )
 
         if not dry_run:
@@ -119,6 +138,18 @@ def rescore(db_path, dry_run=False):
             delta_str = f"+{c['score_delta']}" if c["score_delta"] > 0 else str(c["score_delta"])
             tier_str = f"{c['old_tier']} -> {c['new_tier']}" if c["old_tier"] != c["new_tier"] else ""
             print(f"{c['handle']:<30} {c['old_score'] or 0:<6} {c['new_score']:<6} {delta_str:<8} {tier_str}")
+        print()
+
+    # Hawaii detection changes
+    hawaii_changes = [c for c in changes if c.get("hawaii_changed")]
+    if hawaii_changes:
+        print("=== Hawaii Detection Changes ===")
+        print(f"{'Handle':<30} {'Old':<6} {'New':<6}")
+        print("-" * 42)
+        for c in hawaii_changes:
+            old_str = "Yes" if c["old_hawaii"] else "No"
+            new_str = "Yes" if c["new_hawaii"] else "No"
+            print(f"{c['handle']:<30} {old_str:<6} {new_str:<6}")
         print()
 
     # New Tier 1/2 accounts

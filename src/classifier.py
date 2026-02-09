@@ -7,7 +7,16 @@ _SERVICE_DOG_KEYWORDS = [
     "service dog", "therapy dog", "assistance dog", "guide dog",
     "service animal", "working dog", "canine assisted",
     "animal assisted therapy", "ptsd dog", "seizure dog",
+    "facility dog",
 ]
+
+# Regex for "service dog(s)" with word boundaries — avoids matching
+# "full service dog grooming" (pet_industry, not service_dog_aligned).
+_SERVICE_DOG_RE = re.compile(
+    r'(?<!\bfull\s)'           # negative lookbehind: not preceded by "full "
+    r'\bservice\s+dogs?\b',
+    re.IGNORECASE,
+)
 
 _PET_KEYWORDS = [
     "veterinar", "vet clinic", "pet ", "dog trainer", "dog training",
@@ -41,8 +50,15 @@ _COMMERCIAL_SIGNAL_PATTERNS = [
     re.compile(r"\bsupply\b"),
     re.compile(r"\binc\b"),
     re.compile(r"\bllc\b"),
-    re.compile(r"\bco\b\.?"),
+    re.compile(r"\bco\."),  # "Co." with period (company abbreviation)
 ]
+
+# Regex for "financial" — only match when followed by specific business terms
+# to avoid false positives like "Financial Markets" (forex traders).
+_FINANCIAL_RE = re.compile(
+    r'\bfinancial\s+(services?|advisor|planning|group|institution|solutions?)\b',
+    re.IGNORECASE,
+)
 
 _CORPORATE_KEYWORDS = [
     "electric", "utility", "airline", "telecom", "insurance",
@@ -83,7 +99,7 @@ _PERSONAL_RESCUE_RE = re.compile(
 )
 
 # Strong charity keywords that override personal-rescue exclusion.
-_STRONG_CHARITY_KEYWORDS = ["humane", "nonprofit", "501c", "shelter", "charity"]
+_STRONG_CHARITY_KEYWORDS = ["humane", "nonprofit", "501c", "shelter", "charity", "spca"]
 
 _ORG_KEYWORDS = [
     "church", "school", "rotary", "club", "golf",
@@ -146,6 +162,25 @@ def _has_commercial_signal(text):
     return any(pattern.search(text) for pattern in _COMMERCIAL_SIGNAL_PATTERNS)
 
 
+def _has_service_dog_signal(text):
+    """Return True if text has a genuine service-dog keyword.
+
+    Uses regex for "service dog(s)" to exclude false positives like
+    "full service dog grooming". Other keywords use plain substring match.
+    """
+    # Check regex-guarded "service dog" first
+    if _SERVICE_DOG_RE.search(text):
+        return True
+    # Check remaining keywords (excluding "service dog" which is regex-guarded)
+    other_kw = [kw for kw in _SERVICE_DOG_KEYWORDS if kw != "service dog"]
+    return _has_any(text, other_kw)
+
+
+def _has_nonprofit_signal(text):
+    """Return True if text contains nonprofit/501c indicators."""
+    return "nonprofit" in text or "501c" in text or "non-profit" in text
+
+
 # ── Subcategory detection ──────────────────────────────────────────
 def _service_dog_subcategory(text):
     if "therapy dog" in text or "canine assisted" in text or "animal assisted" in text:
@@ -154,6 +189,8 @@ def _service_dog_subcategory(text):
         return "guide"
     if "emotional support" in text:
         return "emotional_support"
+    if "facility dog" in text:
+        return "facility"
     if "service dog" in text or "service animal" in text:
         return "service"
     return "general"
@@ -276,15 +313,16 @@ def classify(profile):
     follower_count = profile.get("follower_count")
     following_count = profile.get("following_count")
     post_count = profile.get("post_count")
+    is_nonprofit = _has_nonprofit_signal(text)
 
     # Rule 0: service_dog_aligned (highest priority)
-    if _has_any(text, _SERVICE_DOG_KEYWORDS):
+    if _has_service_dog_signal(text):
         return {"category": "service_dog_aligned",
                 "subcategory": _service_dog_subcategory(text),
                 "confidence": 0.95}
 
-    # Rule 1: bank_financial (word boundary on "bank", treating _ as separator)
-    if re.search(r'(?<![a-z])bank(?![a-z])', text) or _has_any(text, ["financial", "credit union"]):
+    # Rule 1: bank_financial (word boundary on "bank", refined "financial")
+    if re.search(r'(?<![a-z])bank(?![a-z])', text) or _FINANCIAL_RE.search(text) or "credit union" in text:
         return {"category": "bank_financial",
                 "subcategory": _bank_subcategory(text),
                 "confidence": 0.9}
@@ -300,13 +338,14 @@ def classify(profile):
                 "confidence": 0.8}
 
     # Rule 3: pet_industry
+    # Skip pet_industry if account is a nonprofit — let charity rule handle it.
     # Strong pet keywords classify without requiring is_business or commercial signal
-    if _has_any(text, _STRONG_PET_KEYWORDS):
+    if _has_any(text, _STRONG_PET_KEYWORDS) and not is_nonprofit:
         return {"category": "pet_industry",
                 "subcategory": _pet_subcategory(text),
                 "confidence": 0.85}
     # Weak pet keywords require is_business or commercial signal
-    if _has_any(text, _PET_KEYWORDS) and (is_biz or _has_commercial_signal(text)):
+    if _has_any(text, _PET_KEYWORDS) and (is_biz or _has_commercial_signal(text)) and not is_nonprofit:
         return {"category": "pet_industry",
                 "subcategory": _pet_subcategory(text),
                 "confidence": 0.85}
@@ -367,10 +406,19 @@ def classify(profile):
                 "confidence": 0.8}
 
     # Rule 7: media_event
+    # Guard: if the ONLY media match is "event"/"events" and the account is
+    # a Hawaii business, defer to business_local (Rule 8) instead.
     if _has_any(text, _MEDIA_KEYWORDS):
-        return {"category": "media_event",
-                "subcategory": _media_subcategory(text),
-                "confidence": 0.75}
+        _media_matches = [kw for kw in _MEDIA_KEYWORDS if kw in text]
+        _only_event = all(m in ("event",) for m in _media_matches)
+        if _only_event and (is_biz or _has_any(text, _STRONG_BUSINESS_KEYWORDS)) and is_hi:
+            pass  # Skip media_event — let business_local handle it
+        elif _only_event and is_nonprofit:
+            pass  # Skip media_event — let charity handle nonprofits
+        else:
+            return {"category": "media_event",
+                    "subcategory": _media_subcategory(text),
+                    "confidence": 0.75}
 
     # Rule 8: business_local (is_business flag OR strong business keywords)
     if (is_biz or _has_any(text, _STRONG_BUSINESS_KEYWORDS)) and is_hi:
