@@ -3,8 +3,8 @@
 
 Usage:
   1. Launch Chrome with remote debugging:
-     /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\
-       --remote-debugging-port=9222
+ /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 
+  --user-data-dir=/tmp/chrome-debug
 
   2. Log into Instagram in that Chrome window
 
@@ -210,7 +210,7 @@ def main():
 
         fetcher = make_fetcher(page, args.delay_min, args.delay_max)
         pending = counts.get("pending", 0) + counts.get(None, 0)
-        fetcher.set_total(total)
+        fetcher.set_total(pending)
 
         # Outer retry loop for rate limits
         while True:
