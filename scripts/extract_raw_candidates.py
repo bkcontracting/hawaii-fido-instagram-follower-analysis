@@ -9,6 +9,7 @@ All analysis is performed by Claude AI.
 import json
 import sqlite3
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional
 import urllib.request
@@ -21,8 +22,58 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from database import _connect
 
 
+class HTMLTextExtractor(HTMLParser):
+    """Extract visible text from HTML, skipping scripts, styles, and head."""
+
+    SKIP_TAGS = frozenset(("script", "style", "noscript", "head"))
+
+    def __init__(self):
+        super().__init__()
+        self._pieces: list[str] = []
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP_TAGS:
+            self._skip_depth += 1
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP_TAGS and self._skip_depth > 0:
+            self._skip_depth -= 1
+
+    def handle_data(self, data):
+        if self._skip_depth == 0:
+            self._pieces.append(data)
+
+    def get_text(self) -> str:
+        import re
+        raw = " ".join(self._pieces)
+        # Collapse whitespace runs into single spaces
+        text = re.sub(r"[ \t]+", " ", raw)
+        # Collapse 3+ newlines into 2
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
+
+
+def _extract_text_from_html(html: str) -> str:
+    """Strip HTML tags and return visible text."""
+    extractor = HTMLTextExtractor()
+    extractor.feed(html)
+    return extractor.get_text()
+
+
+def _truncate_on_word_boundary(text: str, max_chars: int = 1500) -> str:
+    """Truncate text to max_chars, extending to include the full last word."""
+    if len(text) <= max_chars:
+        return text
+    # Find the end of the word that straddles the boundary
+    end = max_chars
+    while end < len(text) and not text[end].isspace():
+        end += 1
+    return text[:end].rstrip()
+
+
 def fetch_website_content(url: str, timeout: int = 5) -> Optional[str]:
-    """Fetch website content and return first 4500 chars of main content.
+    """Fetch website content, extract visible text, return up to ~1500 chars.
 
     Returns None if fetch fails.
     """
@@ -39,9 +90,9 @@ def fetch_website_content(url: str, timeout: int = 5) -> Optional[str]:
             headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
         )
         with urllib.request.urlopen(req, timeout=timeout) as response:
-            content = response.read().decode("utf-8", errors="ignore")
-            # Return first 4500 chars (rough main content)
-            return content[:4500]
+            html = response.read().decode("utf-8", errors="ignore")
+            text = _extract_text_from_html(html)
+            return _truncate_on_word_boundary(text) or None
     except (urllib.error.URLError, urllib.error.HTTPError, Exception):
         # Silently fail - website not available
         return None
