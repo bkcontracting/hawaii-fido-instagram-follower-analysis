@@ -3,7 +3,7 @@
 
 This script:
 1. Loads raw candidate data
-2. Launches 6 Haiku subagents to analyze batches of ~50 profiles each
+2. Launches 6 subagents to analyze batches of ~75 profiles each
 3. Launches 1 Opus 4.6 thinking subagent to rank and select top candidates
 4. Saves results to JSON files
 
@@ -25,7 +25,7 @@ def load_candidates(filepath: str) -> List[Dict[str, Any]]:
         return json.load(f)
 
 
-def split_into_batches(candidates: List[Dict[str, Any]], batch_size: int = 50) -> List[List[Dict[str, Any]]]:
+def split_into_batches(candidates: List[Dict[str, Any]], batch_size: int = 75) -> List[List[Dict[str, Any]]]:
     """Split candidates into batches for parallel processing."""
     batches = []
     for i in range(0, len(candidates), batch_size):
@@ -58,7 +58,7 @@ def prepare_analysis_batches(candidates_file: str, output_dir: str = None) -> Li
     print(f"✓ Loaded {len(candidates)} candidates")
 
     print("Splitting into batches...")
-    batches = split_into_batches(candidates, batch_size=50)
+    batches = split_into_batches(candidates, batch_size=75)
     print(f"✓ Created {len(batches)} batches")
 
     batch_files = []

@@ -5,7 +5,7 @@
 This implementation follows a pure AI-driven approach where:
 - **Python**: Only handles data extraction and formatting (NO intelligence)
 - **Claude AI**: Performs ALL analysis, classification, and evaluation
-- **Subagents**: Analyze batches of 50 profiles in parallel
+- **Subagents**: Analyze batches of 75 profiles in parallel
 - **Review Agent**: Performs final ranking and selection
 
 ## Architecture
@@ -22,7 +22,7 @@ This implementation follows a pure AI-driven approach where:
                          ↓
 ┌─────────────────────────────────────────────────────┐
 │  Layer 2: AI Analysis (Claude - ALL intelligence)    │
-│  9 subagents analyze batches of ~50 profiles         │
+│  6 subagents analyze batches of ~75 profiles         │
 │  Each profile receives complete evaluation:          │
 │    - Exclusion check (competitors, nonprofits, etc.) │
 │    - Financial capacity scoring (0-40)               │
@@ -93,15 +93,12 @@ This implementation follows a pure AI-driven approach where:
 **Architecture**: Opus 4.6 thinking agents
 
 **Batch Distribution**:
-- Batch 1: 50 profiles
-- Batch 2: 50 profiles
-- Batch 3: 50 profiles
-- Batch 4: 50 profiles
-- Batch 5: 50 profiles
-- Batch 6: 50 profiles
-- Batch 7: 50 profiles
-- Batch 8: 50 profiles
-- Batch 9: 44 profiles
+- Batch 1: 75 profiles
+- Batch 2: 75 profiles
+- Batch 3: 75 profiles
+- Batch 4: 75 profiles
+- Batch 5: 75 profiles
+- Batch 6: 69 profiles
 
 **Total**: 444 profiles analyzed in parallel
 
@@ -173,8 +170,8 @@ Each subagent produces JSON array with complete analysis:
    - Applies domain-specific evaluation criteria
    - Makes holistic judgments about fundraising capacity
 
-2. **Parallel Processing**: 9 subagents for speed
-   - 50 profiles per agent is manageable
+2. **Parallel Processing**: 6 subagents for speed
+   - 75 profiles per agent is manageable
    - Parallel execution reduces total time
 
 3. **Website Content Enhancement**: Fetched and cached upfront
@@ -201,7 +198,7 @@ Instead of scoring nonprofits and competitors low, they are now auto-excluded wi
 
 - [x] Raw data extracted (NO intelligence in Python)
 - [x] Website content fetched and cached
-- [ ] 9 subagents launched with new framework
+- [ ] 6 subagents launched with new framework
 - [ ] Analysis framework applied with exclusion rules
 - [ ] Each profile gets 4-factor scoring + exclusion check
 - [ ] All subagents complete
@@ -249,7 +246,7 @@ Instead of scoring nonprofits and competitors low, they are now auto-excluded wi
 
 ### Data Files
 - `data/candidates_raw.json` - Raw candidates (444)
-- `data/analysis_batches/batch_1.json` through `batch_9.json` - Batch files
+- `data/analysis_batches/batch_1.json` through `batch_6.json` - Batch files
 - `data/AI_ANALYSIS_FRAMEWORK.md` - Analysis guidelines (4-factor scoring)
 - `data/all_analyzed_profiles.json` - (to be created) Aggregated analyses
 - `data/top_25_fundraising.json` - (to be created) Final top 25 selection

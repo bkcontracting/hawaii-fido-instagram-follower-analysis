@@ -114,8 +114,14 @@ def _inject_hawaii_spaces(text: str) -> str:
         term_positions = set(range(idx, idx + len(term)))
         if term_positions & claimed:
             continue
-        before = idx > 0 and result[idx - 1] not in (' ', '\t', '\n')
-        after = (idx + len(term)) < len(result) and result[idx + len(term)] not in (' ', '\t', '\n')
+        before_char = result[idx - 1] if idx > 0 else ' '
+        after_char = result[idx + len(term)] if (idx + len(term)) < len(result) else ' '
+        before = before_char not in (' ', '\t', '\n')
+        after = after_char not in (' ', '\t', '\n')
+        # For numeric terms like "808", don't split if surrounded by digits
+        # (e.g., phone numbers like "18085551234").
+        if term.isdigit() and (before_char.isdigit() or after_char.isdigit()):
+            continue
         if before or after:
             # Insert spaces and recalculate position
             new_result = result[:idx] + ' ' + term + ' ' + result[idx + len(term):]

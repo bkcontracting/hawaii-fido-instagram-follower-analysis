@@ -370,8 +370,14 @@ def test_hawaiian_now_medium_weight():
 
 
 def test_hawaiian_electric_is_hawaii():
-    """'hawaiianelectric' with 'Hawaiian Electric' in display name."""
-    assert is_hawaii("hawaiianelectric Hawaiian Electric") is True
+    """'hawaiianelectric' with 'Hawaiian Electric' in display name.
+    hawaiian(0.3) from handle + another signal from bio pushes over threshold."""
+    assert is_hawaii("hawaiianelectric Hawaiian Electric Honolulu") is True
+
+
+def test_hawaiian_electric_confidence():
+    """'hawaiianelectric' should extract 'hawaiian' giving at least 0.3."""
+    assert hawaii_confidence("hawaiianelectric") >= 0.3
 
 
 def test_hawaiian_alone_meets_threshold():

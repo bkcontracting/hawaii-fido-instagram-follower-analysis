@@ -3,7 +3,7 @@
 # Usage: ./run_analysis.sh <task_list_id>
 
 TASK_LIST_ID="${1:?Usage: ./run_analysis.sh <task_list_id>}"
-MAX_ITERATIONS=20
+MAX_ITERATIONS=15
 ITERATION=0
 CONSECUTIVE_ERRORS=0
 MAX_CONSECUTIVE_ERRORS=3

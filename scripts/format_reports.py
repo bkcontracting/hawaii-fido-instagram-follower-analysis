@@ -22,8 +22,6 @@ def load_json(filepath: str) -> List[Dict[str, Any]]:
     if isinstance(data, dict):
         if "top_25_fundraising" in data:
             return data["top_25_fundraising"]
-        elif "top_50_fundraising" in data:
-            return data["top_50_fundraising"]
         elif "top_15_marketing_partners" in data:
             return data["top_15_marketing_partners"]
         elif "candidates" in data:
@@ -288,15 +286,9 @@ if __name__ == "__main__":
     csv_outreach = base_path / "output" / "fundraising_outreach.csv"
     csv_marketing = base_path / "output" / "marketing_partners.csv"
 
-    # Fall back to old filename if new one doesn't exist yet
     if not fundraising_json.exists():
-        old_fundraising = base_path / "data" / "top_50_fundraising.json"
-        if old_fundraising.exists():
-            print(f"Note: {fundraising_json} not found, falling back to {old_fundraising}")
-            fundraising_json = old_fundraising
-        else:
-            print(f"Error: {fundraising_json} not found")
-            exit(1)
+        print(f"Error: {fundraising_json} not found")
+        exit(1)
 
     if not marketing_json.exists():
         print(f"Error: {marketing_json} not found")
