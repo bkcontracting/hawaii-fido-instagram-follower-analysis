@@ -28,6 +28,8 @@ def load_json(filepath: str) -> List[Dict[str, Any]]:
             return data["candidates"]
         elif "partners" in data:
             return data["partners"]
+        elif "prospects" in data:
+            return data["prospects"]
 
     # Otherwise assume it's already the array
     return data if isinstance(data, list) else [data]
