@@ -54,11 +54,134 @@ signal.signal(signal.SIGINT, _handle_signal)
 signal.signal(signal.SIGTERM, _handle_signal)
 
 # ---------------------------------------------------------------------------
+# Browser Connection Manager
+# ---------------------------------------------------------------------------
+
+
+class BrowserConnectionManager:
+    """Manages CDP browser connection lifecycle with automatic reconnection.
+
+    Features:
+    - Auto-reconnect after time threshold (default: 30 minutes)
+    - Auto-reconnect after operation count threshold (default: 100 profiles)
+    - Configurable timeouts on browser/context/page operations
+    - Auto-recovery from CDP connection errors
+    """
+
+    def __init__(self, pw, cdp_url, max_age_seconds=1800, max_operations=100, page_timeout=30000):
+        """
+        Args:
+            pw: Playwright sync_api instance
+            cdp_url: CDP endpoint (e.g., "http://localhost:9222")
+            max_age_seconds: Reconnect after N seconds (default: 1800 = 30 min)
+            max_operations: Reconnect after N profile fetches (default: 100)
+            page_timeout: Page operation timeout in ms (default: 30000 = 30s)
+        """
+        self.pw = pw
+        self.cdp_url = cdp_url
+        self.max_age_seconds = max_age_seconds
+        self.max_operations = max_operations
+        self.page_timeout = page_timeout
+
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.connection_start_time = None
+        self.operations_count = 0
+
+    def connect(self):
+        """Establish CDP connection and configure timeouts."""
+        # Close existing connection if any
+        if self.browser is not None:
+            try:
+                self.browser.close()
+            except:
+                pass
+
+        # Connect via CDP
+        self.browser = self.pw.chromium.connect_over_cdp(self.cdp_url)
+
+        # Get context and page
+        self.context = self.browser.contexts[0]
+        self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
+
+        # Configure timeouts
+        self.context.set_default_timeout(self.page_timeout)
+        self.page.set_default_navigation_timeout(self.page_timeout)
+
+        # Reset operation counter and track connection age
+        self.connection_start_time = time.time()
+        self.operations_count = 0
+
+    def should_reconnect(self):
+        """Check if reconnection is needed based on time or count."""
+        if self.connection_start_time is None:
+            return False
+
+        # Check age
+        elapsed = time.time() - self.connection_start_time
+        if elapsed > self.max_age_seconds:
+            return True
+
+        # Check operation count
+        if self.operations_count >= self.max_operations:
+            return True
+
+        return False
+
+    def reconnect(self, reason="threshold"):
+        """Force reconnection."""
+        print(f"Reconnecting browser (reason: {reason})...")
+        self.connect()
+
+    def get_page(self):
+        """Get current page, reconnecting if needed."""
+        # Every 50 operations, clear browser cache
+        if self.operations_count > 0 and self.operations_count % 50 == 0:
+            try:
+                self.page.evaluate(
+                    "() => { "
+                    "window.localStorage.clear(); "
+                    "window.sessionStorage.clear(); "
+                    "}"
+                )
+            except:
+                pass  # Ignore errors, this is optional cleanup
+
+        # Check if reconnection is needed
+        if self.should_reconnect():
+            elapsed = time.time() - self.connection_start_time
+            reason = (
+                f"age ({int(elapsed)}s > {self.max_age_seconds}s)"
+                if elapsed > self.max_age_seconds
+                else f"operations ({self.operations_count} >= {self.max_operations})"
+            )
+            self.reconnect(reason=reason)
+
+        return self.page
+
+    def increment_operations(self):
+        """Increment operation counter after each profile fetch."""
+        self.operations_count += 1
+
+    def close(self):
+        """Clean shutdown."""
+        if self.browser is not None:
+            try:
+                self.browser.close()
+            except:
+                pass
+        self.browser = None
+        self.context = None
+        self.page = None
+
+
+# ---------------------------------------------------------------------------
 # Fetcher
 # ---------------------------------------------------------------------------
 
 
-def make_fetcher(page, delay_min, delay_max):
+def make_fetcher(connection_manager, delay_min, delay_max):
     """Return a fetcher_fn(handle, profile_url) closure using Playwright."""
     processed = 0
     total = [0]  # mutable so closure can read updated value
@@ -68,35 +191,68 @@ def make_fetcher(page, delay_min, delay_max):
         if shutdown_requested:
             raise SystemExit("shutdown")
 
-        page.goto(profile_url)
-        page.wait_for_load_state("domcontentloaded")
-        page.wait_for_timeout(2000)
+        # CDP error handling with reconnection
+        max_attempts = 2
+        last_error = None
 
-        raw_text = page.evaluate(
-            "document.querySelector('header')?.closest('main')?.innerText"
-            " || document.body.innerText"
-        )
+        for attempt in range(max_attempts):
+            try:
+                # Get page (auto-reconnects if threshold reached)
+                page = connection_manager.get_page()
 
-        enriched = parse_profile_page(raw_text)
+                # Existing fetch logic
+                page.goto(profile_url)
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(2000)
 
-        processed += 1
-        page_state = (enriched.get("page_state") or "normal").lower()
-        status_label = page_state if page_state != "normal" else (
-            "private" if enriched.get("is_private") else "completed"
-        )
-        score_info = ""
-        if status_label == "completed":
-            # Score/category aren't computed yet — batch_orchestrator does that.
-            # Just show the raw extraction summary.
-            fc = enriched.get("follower_count")
-            score_info = f" ({fc} followers)" if fc is not None else ""
-        print(f"  [{processed}/{total[0]}] @{handle} — {status_label}{score_info}")
+                raw_text = page.evaluate(
+                    "document.querySelector('header')?.closest('main')?.innerText"
+                    " || document.body.innerText"
+                )
 
-        # Human-cadence delay
-        delay = random.uniform(delay_min, delay_max)
-        time.sleep(delay)
+                enriched = parse_profile_page(raw_text)
 
-        return enriched
+                # Increment operation counter
+                connection_manager.increment_operations()
+
+                # Existing progress display logic
+                processed += 1
+                page_state = (enriched.get("page_state") or "normal").lower()
+                status_label = page_state if page_state != "normal" else (
+                    "private" if enriched.get("is_private") else "completed"
+                )
+                score_info = ""
+                if status_label == "completed":
+                    # Score/category aren't computed yet — batch_orchestrator does that.
+                    # Just show the raw extraction summary.
+                    fc = enriched.get("follower_count")
+                    score_info = f" ({fc} followers)" if fc is not None else ""
+                print(f"  [{processed}/{total[0]}] @{handle} — {status_label}{score_info}")
+
+                # Human-cadence delay
+                delay = random.uniform(delay_min, delay_max)
+                time.sleep(delay)
+
+                return enriched
+
+            except Exception as e:
+                last_error = e
+                # Check if it's a CDP/Playwright connection error
+                error_str = str(e).lower()
+                is_cdp_error = any(keyword in error_str for keyword in
+                                  ['target closed', 'connection closed', 'session closed',
+                                   'browser closed', 'context closed'])
+
+                if is_cdp_error and attempt < max_attempts - 1:
+                    print(f"  CDP error on @{handle}, reconnecting: {e}")
+                    connection_manager.reconnect(reason="error")
+                    continue
+
+                # Not a CDP error or out of retries, propagate
+                raise
+
+        # Should not reach here, but just in case
+        raise last_error
 
     def set_total(n):
         total[0] = n
@@ -126,7 +282,7 @@ def reset_rate_limited(db_path):
 # ---------------------------------------------------------------------------
 
 
-def dry_run(page, db_path, delay_min, delay_max, count=1):
+def dry_run(connection_manager, db_path, delay_min, delay_max, count=1):
     """Fetch N profiles, print parsed results, don't write to DB."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -141,7 +297,7 @@ def dry_run(page, db_path, delay_min, delay_max, count=1):
         return
 
     print(f"Dry run: fetching {len(rows)} profile(s)\n")
-    fetcher = make_fetcher(page, delay_min, delay_max)
+    fetcher = make_fetcher(connection_manager, delay_min, delay_max)
     fetcher.set_total(len(rows))
 
     for row in rows:
@@ -175,6 +331,12 @@ def main():
     parser.add_argument("--dry-run", nargs="?", type=int, const=1, default=None,
                         metavar="N",
                         help="Fetch N profiles (default 1) and print results without writing to DB")
+    parser.add_argument("--reconnect-minutes", type=int, default=30,
+                        help="Reconnect browser every N minutes (default: 30)")
+    parser.add_argument("--reconnect-count", type=int, default=100,
+                        help="Reconnect browser every N profiles (default: 100)")
+    parser.add_argument("--page-timeout", type=int, default=30,
+                        help="Page operation timeout in seconds (default: 30)")
     args = parser.parse_args()
 
     if not os.path.exists(args.db):
@@ -184,7 +346,14 @@ def main():
     # Connect to existing Chrome via CDP
     pw = sync_playwright().start()
     try:
-        browser = pw.chromium.connect_over_cdp("http://localhost:9222")
+        connection_manager = BrowserConnectionManager(
+            pw=pw,
+            cdp_url="http://localhost:9222",
+            max_age_seconds=args.reconnect_minutes * 60,
+            max_operations=args.reconnect_count,
+            page_timeout=args.page_timeout * 1000  # convert to ms
+        )
+        connection_manager.connect()
     except Exception as e:
         pw.stop()
         print(f"Could not connect to Chrome on port 9222: {e}")
@@ -192,12 +361,9 @@ def main():
               "Google\\ Chrome --remote-debugging-port=9222")
         sys.exit(1)
 
-    context = browser.contexts[0]
-    page = context.pages[0] if context.pages else context.new_page()
-
     try:
         if args.dry_run is not None:
-            dry_run(page, args.db, args.delay_min, args.delay_max, count=args.dry_run)
+            dry_run(connection_manager, args.db, args.delay_min, args.delay_max, count=args.dry_run)
             return
 
         # Print starting status
@@ -208,7 +374,7 @@ def main():
             print(f"  {status}: {count}")
         print()
 
-        fetcher = make_fetcher(page, args.delay_min, args.delay_max)
+        fetcher = make_fetcher(connection_manager, args.delay_min, args.delay_max)
         pending = counts.get("pending", 0) + counts.get(None, 0)
         fetcher.set_total(pending)
 
@@ -271,7 +437,7 @@ def main():
         conn.commit()
         conn.close()
 
-        browser.close()
+        connection_manager.close()
         pw.stop()
 
 
