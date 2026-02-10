@@ -396,7 +396,7 @@ Now aloha_coffee_co sits in the database as a fully enriched record. Here's how 
 | `rescore.py` | Re-applies classifier + scorer to all completed records | After changing classification/scoring rules |
 | `reset_errors.py` | Resets error records to pending for retry | After transient failures (network, rate limits) |
 | `extract_raw_candidates.py` | Dumps completed profiles to JSON + fetches websites | Before AI analysis track |
-| `ai_analysis_orchestrator.py` | Splits candidates into batches of 75 | Before parallel AI subagent analysis |
+| `ai_analysis_orchestrator.py` | Splits candidates into batches of 30 | Before parallel AI subagent analysis |
 | `analyze_fundraising_candidates.py` | Prints summary statistics of candidate data | Sanity check before AI analysis |
 | `format_reports.py` | AI output JSON → markdown report + CSV spreadsheets | After AI analysis completes |
 | `finalize_analysis.sh` | Runs aggregation + formatting in one command | One-click finalization |

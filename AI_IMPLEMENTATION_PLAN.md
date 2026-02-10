@@ -5,7 +5,7 @@
 This implementation follows a pure AI-driven approach where:
 - **Python**: Only handles data extraction and formatting (NO intelligence)
 - **Claude AI**: Performs ALL analysis, classification, and evaluation
-- **Subagents**: Analyze batches of 75 profiles in parallel
+- **Subagents**: Analyze batches of 30 profiles in 3 waves of 6
 - **Review Agent**: Performs final ranking and selection
 
 ## Architecture
@@ -22,7 +22,7 @@ This implementation follows a pure AI-driven approach where:
                          ↓
 ┌─────────────────────────────────────────────────────┐
 │  Layer 2: AI Analysis (Claude - ALL intelligence)    │
-│  6 subagents analyze batches of ~75 profiles         │
+│  15 subagents analyze ~30 profiles (3 waves of 6)    │
 │  Each profile receives complete evaluation:          │
 │    - Exclusion check (competitors, nonprofits, etc.) │
 │    - Financial capacity scoring (0-40)               │
@@ -92,18 +92,19 @@ This implementation follows a pure AI-driven approach where:
 
 **Model**: Sonnet 4.5 (`model: "sonnet"` in Task tool)
 - Framework is well-structured with clear rubrics — Sonnet follows structured instructions well
-- 75 profiles per batch is manageable context
-- 6x Sonnet is significantly cheaper/faster than 6x Opus
+- 30 profiles per batch is manageable context
+- Sonnet is significantly cheaper/faster than Opus at this scale
 
 **Batch Distribution**:
-- Batch 1: 75 profiles
-- Batch 2: 75 profiles
-- Batch 3: 75 profiles
-- Batch 4: 75 profiles
-- Batch 5: 75 profiles
-- Batch 6: 69 profiles
+- Batches 1-14: 30 profiles each
+- Batch 15: 24 profiles
 
-**Total**: 444 profiles analyzed in parallel
+**Wave Execution** (6 concurrent subagents max):
+- Wave 1: Batches 1-6 (6 parallel)
+- Wave 2: Batches 7-12 (6 parallel)
+- Wave 3: Batches 13-15 (3 parallel)
+
+**Total**: 444 profiles analyzed across 15 batches in 3 waves
 
 **Analysis Framework**: `data/AI_ANALYSIS_FRAMEWORK.md`
 - 4-factor scoring system (Financial Capacity, Donor Access, Dinner Potential, Hawaii Connection)
@@ -112,7 +113,7 @@ This implementation follows a pure AI-driven approach where:
 - Calibration examples ensure score consistency
 - Every prospect gets a suggested ask amount
 
-**Execution**: Launch 6 Task subagents in a single message (6 parallel tool calls). Each subagent:
+**Execution**: Launch 15 Task subagents in 3 waves (6 + 6 + 3 parallel tool calls). Wait for each wave to complete before launching the next. Each subagent:
 1. Reads its assigned batch file (`data/analysis_batches/batch_N.json`)
 2. Reads the framework (`data/AI_ANALYSIS_FRAMEWORK.md`)
 3. For each profile, applies hard exclusion rules FIRST (competitors, nonprofits, pet micro, personal → score=0, outreach=SKIP)
@@ -205,8 +206,8 @@ Each subagent produces JSON array with complete analysis:
    - Applies domain-specific evaluation criteria
    - Makes holistic judgments about fundraising capacity
 
-2. **Parallel Processing**: 6 subagents for speed
-   - 75 profiles per agent is manageable
+2. **Parallel Processing**: 15 subagents in 3 waves for balanced speed/reliability
+   - 30 profiles per agent, 6 concurrent max
    - Parallel execution reduces total time
 
 3. **Website Content Enhancement**: Fetched and cached upfront
@@ -242,7 +243,7 @@ Task 1 → Task 2 → Task 3 (Sonnet) ──┐
 |------|-------------|------------|------------|
 | 1 | Run `extract_raw_candidates.py` → `data/candidates_raw.json` | Bash (python3) | — |
 | 2 | Run `ai_analysis_orchestrator.py` → `data/analysis_batches/` | Bash (python3) | Task 1 |
-| 3 | Launch 6 Sonnet subagents to analyze batches → `data/analysis_results/` | Task (Sonnet 4.5) | Task 2 |
+| 3 | Launch 15 Sonnet subagents in 3 waves (6-6-3) to analyze batches → `data/analysis_results/` | Task (Sonnet 4.5) | Task 2 |
 | 4 | Create `scripts/aggregate_and_rank.py` | Write tool | — (parallel with 3) |
 | 5 | Run aggregation, then launch Opus ranking agent → `data/top_25_fundraising.json`, `data/top_15_marketing_partners.json` | Bash + Task (Opus 4.6) | Tasks 3 + 4 |
 | 6 | Run `format_reports.py` → `output/` reports | Bash (python3) | Task 5 |
@@ -252,7 +253,7 @@ Task 1 → Task 2 → Task 3 (Sonnet) ──┐
 
 - [ ] Raw data extracted (NO intelligence in Python)
 - [ ] Website content fetched and cached
-- [ ] 6 Sonnet 4.5 subagents launched with framework
+- [ ] 15 Sonnet 4.5 subagents launched in 3 waves with framework
 - [ ] Analysis framework applied with exclusion rules
 - [ ] Each profile gets 4-factor scoring + exclusion check
 - [ ] All subagents complete
@@ -305,8 +306,8 @@ Task 1 → Task 2 → Task 3 (Sonnet) ──┐
 - `data/followers.db` - Source SQLite database (MUST EXIST before Task 1)
 - `data/AI_ANALYSIS_FRAMEWORK.md` - Analysis guidelines for subagents (EXISTS)
 - `data/candidates_raw.json` - Raw candidates, ~444 (created by Task 1)
-- `data/analysis_batches/batch_1.json` through `batch_6.json` - Batch files (created by Task 2)
-- `data/analysis_results/batch_1_results.json` through `batch_6_results.json` - Subagent outputs (created by Task 3)
+- `data/analysis_batches/batch_1.json` through `batch_15.json` - Batch files (created by Task 2)
+- `data/analysis_results/batch_1_results.json` through `batch_15_results.json` - Subagent outputs (created by Task 3)
 - `data/all_analyzed_profiles.json` - Aggregated analyses (created by Tasks 4+5)
 - `data/top_25_fundraising.json` - Final top 25 selection (created by Task 5)
 - `data/top_15_marketing_partners.json` - Final marketing selection (created by Task 5)
