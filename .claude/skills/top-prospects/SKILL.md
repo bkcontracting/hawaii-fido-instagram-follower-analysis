@@ -7,6 +7,8 @@ description: Money & network candidates — who can write checks and who can con
 
 Query `data/followers.db` to find **who can write checks and who can connect us to people who write checks**. Results are grouped into 4 priority tiers ordered by fundraising capacity and network value — NOT pet/dog alignment.
 
+> **OUTPUT FORMAT: All results MUST be rendered as markdown tables grouped by tier. No prose profiles, no numeric scores, no individual prospect sections.**
+
 ## Step 1: Run the Queries
 
 Connect to `data/followers.db` using the Bash tool with `sqlite3`. Run all four tier queries below.
@@ -139,41 +141,56 @@ Post-processing: No tier exclusions apply. Accounts may also appear in tiers abo
 
 For accounts not listed above, assess normally using bio, category, and is_hawaii context.
 
-## Step 2: Assess Each Account
+## Step 2: Assess Each Account (for table columns only)
 
-For every account in each tier, determine these values by reading the bio, website, follower_count, and category context:
+For every account returned by the tier queries, determine the values below by reading bio, website, follower_count, and category. These assessments go directly into table cells.
 
-| Field | How to assess |
-|-------|--------------|
-| **$$ Potential** | Can they write a donation check? `High` = $5k+, `Med` = $1-5k, `Low` = <$1k, `None` = amplification only |
-| **Network Value** | Can they connect us to other donors/orgs? `High` = direct access to wealthy network, `Med` = some connections, `Low` = limited network |
-| **Best Move** | 1-line recommended outreach action |
+**Do NOT produce individual prospect profiles, detailed breakdowns, multi-paragraph analyses, numeric scores, or scoring rubrics. All analysis is expressed ONLY within the table columns.**
+
+| Column | How to populate | Constraint |
+|--------|----------------|------------|
+| **Who They Are** | display_name + short description | 10 words max, single phrase, no sentences |
+| **$$ Potential** | Can they write a donation check? | High ($5k+), Med ($1-5k), Low (<$1k), or None |
+| **Network Value** | Can they connect us to other donors? | High, Med, or Low |
+| **Best Move** | Recommended outreach action | 15 words max |
 
 ## Step 3: Format Output
 
-### For each tier, render a markdown table:
+**TABLES ONLY — every tier MUST render as a single markdown table. No individual prospect sections, no detailed breakdowns, no scoring rubrics, no numeric scores. Output MUST be organized by tier (TIER 1, TIER 2, TIER 3, TIER 4, HIGH FOLLOWER COUNT), not as a flat ranked list.**
+
+### Tier table format (Tiers 1-4):
+
+Reproduce this exact structure for each tier:
 
 ```
 ## TIER [N] — [Title] ([count] accounts)
 
 | Rank | Handle | Who They Are | Followers | Hawaii | $$ Potential | Network Value | Best Move |
 |------|--------|-------------|-----------|--------|-------------|--------------|-----------|
-| 1 | [@handle](profile_url) | display_name — 1-line description | follower_count | Y/N | High/Med/Low/None | High/Med/Low | 1-line action |
+| 1 | [@handle](profile_url) | display_name — short description | follower_count | Y/N | High/Med/Low/None | High/Med/Low | concise action |
 ```
 
-### For the HIGH FOLLOWER COUNT section, render:
+**Example completed row (Tier 1):**
+
+```
+| 1 | [@hawaiianelectric](https://instagram.com/hawaiianelectric) | Hawaiian Electric — Major HI utility, 130+ yrs | — | Y | High | High | Pitch CSR dept for $10K event sponsorship |
+```
+
+### HIGH FOLLOWER COUNT table format:
+
+Reproduce this exact structure:
 
 ```
 ## HIGH FOLLOWER COUNT — Audience Size Leaders (12 accounts)
 
 | Rank | Handle | Who They Are | Followers | Category | Hawaii | Also In Tier | Notes |
 |------|--------|-------------|-----------|----------|--------|-------------|-------|
-| 1 | [@handle](profile_url) | display_name — 1-line description | follower_count | category | Y/N | Tier N or — | Exclusion/context note or assessment |
+| 1 | [@handle](profile_url) | display_name — short description | follower_count | category | Y/N | Tier N or — | Exclusion/context note |
 ```
 
 ### Known high-value accounts to watch for:
 
-These accounts have been verified as high-value. Make sure they appear in the correct tier and are assessed honestly:
+These accounts have been verified as high-value. They MUST appear in their respective tier tables and be assessed honestly — do not generate separate sections for them:
 
 **Tier 1:** hawaiianelectric, hanakoabrewing, vibecreativehawaii, theofficialroute99hawaii, augietulba.hnl, jabbalikespho, inform_hi, teamjacohawaii, pearlhotelwaikiki, repbranco, akamaienergy, fvchawaii, hawaiidisability, hondahawaiiguy, premiumincorporated
 
@@ -185,7 +202,7 @@ These accounts have been verified as high-value. Make sure they appear in the co
 
 ### End with: Top 5 Actions
 
-After all tier tables, add:
+After all tier tables, add this section (numbered list format, not a table):
 
 ```
 ## Top 5 Actions — Highest ROI Moves
