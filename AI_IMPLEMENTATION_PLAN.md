@@ -90,7 +90,10 @@ This implementation follows a pure AI-driven approach where:
 
 ### Step 2: Parallel AI Analysis
 
-**Architecture**: Opus 4.6 thinking agents
+**Model**: Sonnet 4.5 (`model: "sonnet"` in Task tool)
+- Framework is well-structured with clear rubrics — Sonnet follows structured instructions well
+- 75 profiles per batch is manageable context
+- 6x Sonnet is significantly cheaper/faster than 6x Opus
 
 **Batch Distribution**:
 - Batch 1: 75 profiles
@@ -109,7 +112,15 @@ This implementation follows a pure AI-driven approach where:
 - Calibration examples ensure score consistency
 - Every prospect gets a suggested ask amount
 
-**Subagent Outputs**:
+**Execution**: Launch 6 Task subagents in a single message (6 parallel tool calls). Each subagent:
+1. Reads its assigned batch file (`data/analysis_batches/batch_N.json`)
+2. Reads the framework (`data/AI_ANALYSIS_FRAMEWORK.md`)
+3. For each profile, applies hard exclusion rules FIRST (competitors, nonprofits, pet micro, personal → score=0, outreach=SKIP)
+4. For scoreable entities, evaluates 4 factors: Financial Capacity (0-40), Donor Access (0-25), Dinner Potential (0-20), Hawaii Connection (0-15)
+5. Assigns entity_type, outreach_type, suggested_ask_amount
+6. Writes results as JSON array to `data/analysis_results/batch_N_results.json`
+
+**Subagent Output Schema**:
 Each subagent produces JSON array with complete analysis:
 ```json
 {
@@ -136,24 +147,48 @@ Each subagent produces JSON array with complete analysis:
 }
 ```
 
-### Step 3: Final Ranking
+### Step 3: Aggregate Results
+
+**Script**: `scripts/aggregate_and_rank.py` (MUST CREATE — does not exist yet)
+
+**Purpose**: Pure data aggregation — NO intelligence, NO re-scoring, NO filtering.
+
+**Implementation**:
+1. Glob `data/analysis_results/batch_*_results.json` to find all result files
+2. Load and parse each JSON file (handle both raw array and `{"candidates": [...]}` wrapper formats — match the pattern in `format_reports.py:load_json()`)
+3. Merge all profiles into a single list
+4. Validate: assert no duplicate handles, assert all excluded entities (entity_type starts with `EXCLUDE_`) have score=0
+5. Sort by score descending
+6. Print summary stats: total profiles, excluded count, scored count, score distribution
+7. Save to `data/all_analyzed_profiles.json`
+
+**Style**: Match existing scripts — use `pathlib.Path`, `json` stdlib, print progress with checkmarks, `sys.exit(1)` on errors
+
+**Can run in parallel with Step 2** — write the script while subagents analyze.
+
+### Step 4: Final Ranking
+
+**Model**: Opus 4.6 (`model: "opus"` in Task tool)
+- Holistic reasoning across all 444 profiles benefits from the strongest model
+- Cross-comparing scores, ensuring diversity of entity types, strategic selection
 
 **Process**:
-1. Aggregate all 444 analyzed profiles
+1. Read `data/all_analyzed_profiles.json` (aggregated from Step 3)
 2. Use Opus 4.6 thinking subagent to:
    - Verify all excluded entities have score = 0
    - Review all scored profiles and validate scores
    - Select top 25 for fundraising (diverse mix of entity types)
-   - Select top 15 for marketing (high-follower accounts)
+   - Select top 15 for marketing (high-follower accounts, 5K+ followers)
    - Provide strategic reasoning for each selection
+3. Write results to JSON files
 
 **Output Files**:
 - `data/top_25_fundraising.json` - Top 25 fundraising prospects
 - `data/top_15_marketing_partners.json` - Top 15 marketing partners
 
-### Step 4: Format Reports
+### Step 5: Format Reports
 
-**Script**: `scripts/format_reports.py`
+**Script**: `scripts/format_reports.py` (COMPLETE — ready to run)
 
 **Outputs**:
 1. `output/fundraising_recommendations.md` - Comprehensive report with top 25 + marketing partners
@@ -194,20 +229,41 @@ The previous framework included "Strategic Alignment & Mission Fit" which reward
 
 Instead of scoring nonprofits and competitors low, they are now auto-excluded with score = 0. This prevents any possibility of mission-aligned but financially worthless entities from appearing in results.
 
+## Task Execution Plan
+
+Use TaskCreate to create these 7 tasks in order. Tasks 3 and 4 can run in parallel; all others are sequential.
+
+```
+Task 1 → Task 2 → Task 3 (Sonnet) ──┐
+                   Task 4 (write) ───┤→ Task 5 (Opus) → Task 6 → Task 7
+```
+
+| Task | Description | Model/Tool | Depends On |
+|------|-------------|------------|------------|
+| 1 | Run `extract_raw_candidates.py` → `data/candidates_raw.json` | Bash (python3) | — |
+| 2 | Run `ai_analysis_orchestrator.py` → `data/analysis_batches/` | Bash (python3) | Task 1 |
+| 3 | Launch 6 Sonnet subagents to analyze batches → `data/analysis_results/` | Task (Sonnet 4.5) | Task 2 |
+| 4 | Create `scripts/aggregate_and_rank.py` | Write tool | — (parallel with 3) |
+| 5 | Run aggregation, then launch Opus ranking agent → `data/top_25_fundraising.json`, `data/top_15_marketing_partners.json` | Bash + Task (Opus 4.6) | Tasks 3 + 4 |
+| 6 | Run `format_reports.py` → `output/` reports | Bash (python3) | Task 5 |
+| 7 | Verify results against expected outcomes | Read tool | Task 6 |
+
 ## Verification Checklist
 
-- [x] Raw data extracted (NO intelligence in Python)
-- [x] Website content fetched and cached
-- [ ] 6 subagents launched with new framework
+- [ ] Raw data extracted (NO intelligence in Python)
+- [ ] Website content fetched and cached
+- [ ] 6 Sonnet 4.5 subagents launched with framework
 - [ ] Analysis framework applied with exclusion rules
 - [ ] Each profile gets 4-factor scoring + exclusion check
 - [ ] All subagents complete
-- [ ] Results aggregated into single JSON
+- [ ] `aggregate_and_rank.py` created and working
+- [ ] Results aggregated into `data/all_analyzed_profiles.json`
 - [ ] Opus 4.6 performs final ranking
 - [ ] Top 25 fundraising selected (quality over quantity)
 - [ ] Top 15 marketing partners selected (5K+ followers)
-- [ ] Format reports script updated and ready
-- [ ] Final reports generated
+- [ ] Format reports script runs successfully
+- [ ] Final reports generated in `output/`
+- [ ] Expected good rankings present, expected exclusions absent
 
 ### Expected Good Rankings (MUST be in top 10-25):
 - Hawaiian Electric (corporation, ~90)
@@ -239,20 +295,23 @@ Instead of scoring nonprofits and competitors low, they are now auto-excluded wi
 ## Files
 
 ### Python Scripts
-- `scripts/extract_raw_candidates.py` - Data extraction
-- `scripts/ai_analysis_orchestrator.py` - Batch preparation
-- `scripts/aggregate_and_rank.py` - Results aggregation
-- `scripts/format_reports.py` - Report formatting
+- `scripts/extract_raw_candidates.py` - Data extraction (EXISTS, ready to run)
+- `scripts/ai_analysis_orchestrator.py` - Batch preparation (EXISTS, ready to run)
+- `scripts/aggregate_and_rank.py` - Results aggregation (MUST CREATE in Task 4)
+- `scripts/format_reports.py` - Report formatting (EXISTS, ready to run)
+- `scripts/finalize_analysis.sh` - Runs aggregate + format in sequence (EXISTS)
 
 ### Data Files
-- `data/candidates_raw.json` - Raw candidates (444)
-- `data/analysis_batches/batch_1.json` through `batch_6.json` - Batch files
-- `data/AI_ANALYSIS_FRAMEWORK.md` - Analysis guidelines (4-factor scoring)
-- `data/all_analyzed_profiles.json` - (to be created) Aggregated analyses
-- `data/top_25_fundraising.json` - (to be created) Final top 25 selection
-- `data/top_15_marketing_partners.json` - (to be created) Final marketing selection
+- `data/followers.db` - Source SQLite database (MUST EXIST before Task 1)
+- `data/AI_ANALYSIS_FRAMEWORK.md` - Analysis guidelines for subagents (EXISTS)
+- `data/candidates_raw.json` - Raw candidates, ~444 (created by Task 1)
+- `data/analysis_batches/batch_1.json` through `batch_6.json` - Batch files (created by Task 2)
+- `data/analysis_results/batch_1_results.json` through `batch_6_results.json` - Subagent outputs (created by Task 3)
+- `data/all_analyzed_profiles.json` - Aggregated analyses (created by Tasks 4+5)
+- `data/top_25_fundraising.json` - Final top 25 selection (created by Task 5)
+- `data/top_15_marketing_partners.json` - Final marketing selection (created by Task 5)
 
 ### Output Reports
-- `output/fundraising_recommendations.md` - Full report (top 25 + marketing)
-- `output/fundraising_outreach.csv` - Outreach list (top 25)
-- `output/marketing_partners.csv` - Campaign list (top 15)
+- `output/fundraising_recommendations.md` - Full report with top 25 + marketing (created by Task 6)
+- `output/fundraising_outreach.csv` - Outreach list for top 25 (created by Task 6)
+- `output/marketing_partners.csv` - Campaign list for top 15 (created by Task 6)
