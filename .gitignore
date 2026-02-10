@@ -4,6 +4,14 @@ data/followers_validated.csv
 data/*.db-shm
 data/*.db-wal
 data/*.db.bak
+data/analysis_batches
+data/analysis_results
+data/candidates_raw.json
+data/top_15_marketing_partners.json
+data/top_25_fundraising.json
+data/all_analyzed_profiles.json 
+
+
 .worktrees/
 .playwright-mcp/
 .playwright/
