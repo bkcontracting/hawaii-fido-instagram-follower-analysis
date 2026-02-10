@@ -231,6 +231,10 @@ def format_marketing_partners_csv(
             "Entity Type",
             "Hawaii-Based",
             "Score",
+            "Audience Alignment",
+            "Campaign Fit",
+            "Campaign Ideas",
+            "Reasoning",
             "Website",
             "Bio",
         ])
@@ -245,6 +249,10 @@ def format_marketing_partners_csv(
                 "Entity Type": partner.get("entity_type", ""),
                 "Hawaii-Based": "Yes" if partner.get("hawaii_based") else "No",
                 "Score": partner.get("score", ""),
+                "Audience Alignment": partner.get("audience_alignment", ""),
+                "Campaign Fit": partner.get("campaign_fit", ""),
+                "Campaign Ideas": partner.get("campaign_ideas", ""),
+                "Reasoning": partner.get("reasoning", ""),
                 "Website": partner.get("website", ""),
                 "Bio": partner.get("bio", ""),
             })
