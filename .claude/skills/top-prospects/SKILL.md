@@ -110,6 +110,35 @@ ORDER BY follower_count DESC;
 
 Post-processing: Only keep businesses with physical locations, established operations, and clear revenue >$30k/yr. Exclude individual trainers, groomers, walkers, vets, pet sitters, and personal pet pages.
 
+### HIGH FOLLOWER COUNT — Audience Size Leaders
+
+**Goal:** Visibility into the largest audiences following @hawaiifido regardless of tier classification or category. Purely count-based — surfaces accounts that may warrant outreach based on audience size alone.
+
+```sql
+SELECT handle, display_name, category, subcategory, follower_count,
+  is_hawaii, bio, website, profile_url
+FROM followers
+WHERE status = 'completed'
+  AND category != 'spam_bot'
+ORDER BY follower_count DESC
+LIMIT 12;
+```
+
+Post-processing: No tier exclusions apply. Accounts may also appear in tiers above — that is expected. Add a **Notes** column with context on why high-follower accounts were excluded from upper tiers or have limited fundraising relevance. Use these known exclusion notes:
+
+| Handle | Note |
+|--------|------|
+| leilahurst | Large following but no evident HI/service dog/nonprofit connection |
+| psychological_vigilante | Large following but no evident HI/service dog/nonprofit connection |
+| yafavoritelatinaa | Large following but no evident HI/service dog/nonprofit connection |
+| emerson_and_co | Large dog account but mainland-based, no fundraising path |
+| frenchbulldog_world.ak | Generic dog fan page, spam-adjacent |
+| chippertonphotography | Dog photographer but not HI-based |
+| harry_and_enzo | NYC-based animal rescue, not local |
+| cookieclips | Pet Shih Tzu fan account |
+
+For accounts not listed above, assess normally using bio, category, and is_hawaii context.
+
 ## Step 2: Assess Each Account
 
 For every account in each tier, determine these values by reading the bio, website, follower_count, and category context:
@@ -130,6 +159,16 @@ For every account in each tier, determine these values by reading the bio, websi
 | Rank | Handle | Who They Are | Followers | Hawaii | $$ Potential | Network Value | Best Move |
 |------|--------|-------------|-----------|--------|-------------|--------------|-----------|
 | 1 | [@handle](profile_url) | display_name — 1-line description | follower_count | Y/N | High/Med/Low/None | High/Med/Low | 1-line action |
+```
+
+### For the HIGH FOLLOWER COUNT section, render:
+
+```
+## HIGH FOLLOWER COUNT — Audience Size Leaders (12 accounts)
+
+| Rank | Handle | Who They Are | Followers | Category | Hawaii | Also In Tier | Notes |
+|------|--------|-------------|-----------|----------|--------|-------------|-------|
+| 1 | [@handle](profile_url) | display_name — 1-line description | follower_count | category | Y/N | Tier N or — | Exclusion/context note or assessment |
 ```
 
 ### Known high-value accounts to watch for:
@@ -161,6 +200,6 @@ After all tier tables, add:
 These should be the 5 single highest-ROI outreach moves across all tiers, considering donation capacity, network access, and ease of approach.
 
 ## Optional Filters (from user arguments)
-- `--tier <N>` — show only the specified tier (1-4)
+- `--tier <N>` — show only the specified tier (1-4), or use `--tier followers` for just the HIGH FOLLOWER COUNT section
 - `--hawaii` — only show `is_hawaii = 1`
 - `--limit <N>` — limit accounts per tier (default: no limit)
