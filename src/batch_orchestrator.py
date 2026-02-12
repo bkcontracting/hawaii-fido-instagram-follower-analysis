@@ -1,21 +1,12 @@
 """Batch processing orchestrator with crash recovery and retry logic."""
 import datetime
-import sqlite3
 import sys
 
 from src import config
-from src.database import update_follower
+from src.database import _connect, update_follower
 from src.location_detector import is_hawaii
 from src.classifier import classify
 from src.scorer import score
-
-
-def _connect(db_path):
-    """Open a connection with Row factory and WAL mode."""
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    return conn
 
 
 def create_batch(db_path):
@@ -72,11 +63,12 @@ def create_batch(db_path):
 def process_batch(db_path, batch, fetcher_fn):
     """Process a batch of followers through the enrichment pipeline.
 
-    Returns {completed: int, errors: int}.
+    Returns {completed: int, errors: int, error_handles: list[str]}.
     Error on a single follower doesn't stop the batch.
     """
     completed = 0
     errors = 0
+    error_handles = []
 
     for follower in batch:
         handle = follower["handle"]
@@ -94,6 +86,7 @@ def process_batch(db_path, batch, fetcher_fn):
                     "processed_at": datetime.datetime.now().isoformat(),
                 })
                 errors += 1
+                error_handles.append(handle)
                 continue
 
             if page_state in {"rate_limited", "login_required"}:
@@ -146,79 +139,60 @@ def process_batch(db_path, batch, fetcher_fn):
                 "processed_at": datetime.datetime.now().isoformat(),
             })
             errors += 1
+            error_handles.append(handle)
 
-    return {"completed": completed, "errors": errors}
+    return {"completed": completed, "errors": errors, "error_handles": error_handles}
 
 
 def run_with_retries(db_path, batch, fetcher_fn):
     """Process batch with up to MAX_RETRIES total attempts.
 
-    Returns {completed: int, errors: int, retries_used: int, exhausted: bool}.
+    After each failed attempt, error handles from process_batch are reset to
+    'pending' and retried.  Returns {completed, errors, retries_used, exhausted}.
     """
     max_retries = config.MAX_RETRIES
     total_completed = 0
     retries_used = 0
+    last_error_count = 0
 
     current_batch = batch
 
     for attempt in range(max_retries):
         result = process_batch(db_path, current_batch, fetcher_fn)
         total_completed += result["completed"]
+        last_error_count = result["errors"]
 
         if result["errors"] == 0:
             break
 
         if attempt < max_retries - 1:
             retries_used += 1
-            # Reset error records to pending for retry
-            error_handles = []
+            error_handles = result["error_handles"]
+
+            # Reset errored records to pending and rebuild batch for retry
             conn = _connect(db_path)
             try:
-                for follower in current_batch:
-                    row = conn.execute(
-                        "SELECT status FROM followers WHERE handle = ?",
-                        (follower["handle"],)
-                    ).fetchone()
-                    if row and row["status"] == "error":
-                        error_handles.append(follower["handle"])
-
-                for h in error_handles:
-                    conn.execute(
-                        "UPDATE followers SET status = 'pending', error_message = NULL WHERE handle = ?",
-                        (h,)
-                    )
+                placeholders = ",".join("?" for _ in error_handles)
+                conn.execute(
+                    f"UPDATE followers SET status = 'pending', error_message = NULL "
+                    f"WHERE handle IN ({placeholders})",
+                    error_handles,
+                )
                 conn.commit()
 
-                # Re-fetch the error records for retry
-                current_batch = []
-                for h in error_handles:
-                    row = conn.execute(
-                        "SELECT * FROM followers WHERE handle = ?", (h,)
-                    ).fetchone()
-                    if row:
-                        current_batch.append(dict(row))
+                rows = conn.execute(
+                    f"SELECT * FROM followers WHERE handle IN ({placeholders})",
+                    error_handles,
+                ).fetchall()
+                current_batch = [dict(row) for row in rows]
             finally:
                 conn.close()
 
-    # Count remaining errors
-    final_errors = 0
-    conn = _connect(db_path)
-    try:
-        for follower in batch:
-            row = conn.execute(
-                "SELECT status FROM followers WHERE handle = ?",
-                (follower["handle"],)
-            ).fetchone()
-            if row and row["status"] == "error":
-                final_errors += 1
-    finally:
-        conn.close()
-
     return {
         "completed": total_completed,
-        "errors": final_errors,
+        "errors": last_error_count,
         "retries_used": retries_used,
-        "exhausted": final_errors > 0,
+        "exhausted": last_error_count > 0,
     }
 
 

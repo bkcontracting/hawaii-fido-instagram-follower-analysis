@@ -1,4 +1,5 @@
 """SQLite storage for Instagram follower data."""
+import re
 import sqlite3
 
 _SCHEMA = """
@@ -29,13 +30,9 @@ CREATE TABLE IF NOT EXISTS followers (
 )
 """
 
-_VALID_COLUMNS = {
-    "handle", "display_name", "profile_url", "follower_count",
-    "following_count", "post_count", "bio", "website", "is_verified",
-    "is_private", "is_business", "category", "subcategory", "location",
-    "is_hawaii", "confidence", "priority_score", "priority_reason",
-    "status", "error_message", "processed_at",
-}
+# Derived from _SCHEMA so adding a column automatically makes it updatable.
+# Excludes auto-managed columns (id, created_at) that callers should never set.
+_VALID_COLUMNS = set(re.findall(r"^ {4,}(\w+)\s+\w+", _SCHEMA, re.MULTILINE)) - {"id", "created_at"}
 
 
 def _connect(db_path: str) -> sqlite3.Connection:

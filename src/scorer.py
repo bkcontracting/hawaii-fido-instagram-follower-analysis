@@ -93,14 +93,18 @@ def score(profile):
 
     bio_lower = bio.lower()
 
-    # Mission alignment bio bonus — NO-STACK with service_dog_aligned category
+    # ── Bio alignment bonuses (no-stack hierarchy) ────────────────
+    # These three bonuses are mutually exclusive to prevent double-counting:
+    #   1. service_dog_aligned category already gets +35 — skip mission_aligned
+    #   2. mission_aligned (+10) awarded if bio mentions service/therapy/disability
+    #   3. dogs_pets_bio (+10) awarded only if neither #1 nor #2 applied,
+    #      and category isn't pet_industry (which already gets its own +25)
     has_mission = (category != "service_dog_aligned"
                    and re.search(r'\b(service\s+dog|therapy\s+dog|assistance|disability)\b', bio_lower))
     if has_mission:
         total += 10
         reasons.append("mission_aligned(+10)")
 
-    # Dogs/pets bio bonus — NO-STACK with pet_industry, service_dog_aligned, and mission_aligned
     if (category not in ("pet_industry", "service_dog_aligned")
             and not has_mission
             and re.search(r'\b(dogs?|pets?|dog\s+mom|dog\s+dad|fur\s+parent|pup\s+parent)\b', bio_lower)):
