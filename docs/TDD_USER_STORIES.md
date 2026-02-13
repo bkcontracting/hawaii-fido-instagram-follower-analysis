@@ -38,6 +38,16 @@ grep -q "data/followers.db.bak" .gitignore
 `data/analysis_results`, and `data/candidates_raw.json`. Verify these are
 present and add any that are missing. Do NOT remove existing patterns.
 
+#### EVAL — must pass to proceed to Story 1.1:
+```
+RUN:      grep -c "data/candidates_raw.json\|data/analysis_batches\|data/analysis_results\|data/followers.db.bak" .gitignore
+EXPECT:   4 (all 4 patterns present)
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   "X passed" with 0 failed, 0 errors (baseline unchanged)
+```
+**BLOCKED if:** any pattern missing from .gitignore OR any existing test regresses.
+
 ---
 
 ### Story 1.1: Extract Browser Connection Module
@@ -139,6 +149,22 @@ Extract from `scripts/enrich.py`:
 #### REFACTOR:
 - Ensure `enrich.py` still works by importing from `src.browser`
 - No behavior changes
+
+#### EVAL — must pass to proceed to Story 1.2:
+```
+RUN:      pytest tests/unit/test_browser.py -v 2>&1 | tail -1
+EXPECT:   "7 passed" — 0 failed, 0 errors
+TESTS:    test_init_stores_port, test_default_port_is_9222,
+          test_connect_raises_without_chrome, test_is_connected_false_before_connect,
+          test_returns_callable, test_fetcher_uses_manager, test_no_external_deps
+
+RUN:      python3 -c "from src.browser import BrowserConnectionManager, make_fetcher"
+EXPECT:   exit code 0 (no output)
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL existing tests still pass (0 regressions)
+```
+**BLOCKED if:** any test_browser test fails OR any existing test regresses OR import fails.
 
 ---
 
@@ -281,6 +307,23 @@ Move from `scripts/extract_raw_candidates.py`:
 - Optional website content fetching
 - JSON output writing
 
+#### EVAL — must pass to proceed to Story 1.3:
+```
+RUN:      pytest tests/unit/test_candidate_extractor.py -v 2>&1 | tail -1
+EXPECT:   "7 passed" — 0 failed, 0 errors
+TESTS:    test_returns_list, test_excludes_pending_profiles,
+          test_excludes_error_profiles, test_includes_private_profiles,
+          test_each_candidate_has_required_fields,
+          test_writes_json_output_file, test_empty_db_returns_empty_list
+
+RUN:      python3 -c "from src.candidate_extractor import extract_candidates"
+EXPECT:   exit code 0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL existing tests still pass (0 regressions)
+```
+**BLOCKED if:** any candidate_extractor test fails OR import fails OR regression.
+
 ---
 
 ### Story 1.3: Extract Analysis Module
@@ -418,6 +461,25 @@ class TestAggregateResults:
         assert result["total"] == 0
 ```
 
+#### EVAL — must pass to proceed to Story 1.4:
+```
+RUN:      pytest tests/unit/test_analysis.py -v 2>&1 | tail -1
+EXPECT:   "9 passed" — 0 failed, 0 errors
+TESTS:    test_splits_into_correct_count, test_batch_files_are_valid_json,
+          test_all_candidates_present_across_batches,
+          test_empty_input_produces_no_batches,
+          test_batch_size_larger_than_input, test_default_batch_size,
+          test_writes_scores_to_database, test_returns_count_summary,
+          test_empty_results_dir
+
+RUN:      python3 -c "from src.analysis import split_batches, aggregate_results"
+EXPECT:   exit code 0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL existing tests still pass (0 regressions)
+```
+**BLOCKED if:** any analysis test fails OR import fails OR regression.
+
 ---
 
 ### Story 1.4: Extract DB Reports Module
@@ -461,6 +523,26 @@ Update only: `if __name__ == "__main__"` block removed (or kept as no-op).
 #### REFACTOR:
 - Update test imports from `scripts.generate_db_reports` to `src.db_reports`
 - Verify all 1,354 lines of tests pass
+
+#### EVAL — must pass to proceed to Story 1.5:
+```
+RUN:      pytest tests/unit/test_generate_db_reports.py -v 2>&1 | tail -1
+EXPECT:   ALL existing tests pass (the full 1,354-line suite)
+          Specific: TestIsExcluded, TestIsMarketingExcluded, TestSuggestedAsk,
+          TestBioText, TestEnrich, TestLoadCompletedProfiles, TestWriteMarkdown,
+          TestWriteFundraisingCsv, TestWriteMarketingCsv, TestGenerateReports,
+          TestConstants — ALL PASS
+
+RUN:      python3 -c "from src.db_reports import generate_reports, _is_excluded, _bio_text"
+EXPECT:   exit code 0
+
+RUN:      python3 -c "from src.db_reports import _CATEGORY_TO_ENTITY, _EXCLUDED_CATEGORIES"
+EXPECT:   exit code 0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions anywhere)
+```
+**BLOCKED if:** ANY of the 1,354 existing report tests fail OR import fails OR regression.
 
 ---
 
@@ -590,6 +672,24 @@ class TestFormatAiReports:
         assert scores == sorted(scores, reverse=True)
 ```
 
+#### EVAL — must pass to proceed to Story 1.6:
+```
+RUN:      pytest tests/unit/test_ai_reports.py -v 2>&1 | tail -1
+EXPECT:   "7 passed" — 0 failed, 0 errors
+TESTS:    test_generates_markdown_file, test_generates_csv_file,
+          test_csv_has_header_row, test_excludes_skip_profiles_from_output,
+          test_markdown_contains_top_prospects,
+          test_empty_profiles_produces_empty_report,
+          test_profiles_sorted_by_score_descending
+
+RUN:      python3 -c "from src.ai_reports import format_ai_reports"
+EXPECT:   exit code 0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** any ai_reports test fails OR import fails OR regression.
+
 ---
 
 ### Story 1.6: Phase A Gate
@@ -631,6 +731,31 @@ echo "=== Phase A Gate PASSED ==="
 ```
 
 **On pass:** `git commit` + checkpoint.
+
+#### EVAL — must pass to proceed to Epic 2:
+```
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass: existing + 30 new (browser=7, extractor=7, analysis=9, ai_reports=7)
+          0 failures, 0 errors
+
+RUN:      python3 -c "from src.browser import BrowserConnectionManager, make_fetcher"
+EXPECT:   exit code 0
+RUN:      python3 -c "from src.candidate_extractor import extract_candidates"
+EXPECT:   exit code 0
+RUN:      python3 -c "from src.analysis import split_batches, aggregate_results"
+EXPECT:   exit code 0
+RUN:      python3 -c "from src.db_reports import generate_reports"
+EXPECT:   exit code 0
+RUN:      python3 -c "from src.ai_reports import format_ai_reports"
+EXPECT:   exit code 0
+
+RUN:      test -f tests/unit/test_browser.py && test -f tests/unit/test_candidate_extractor.py && test -f tests/unit/test_analysis.py && test -f tests/unit/test_ai_reports.py && echo "OK"
+EXPECT:   "OK"
+
+RUN:      git log --oneline -1
+EXPECT:   Commit message contains "Phase A gate PASS"
+```
+**BLOCKED if:** any import fails, any test fails, any test file missing, or no git commit.
 
 ---
 
@@ -753,6 +878,21 @@ Add `phase_1_import`, `phase_3_extract`, `phase_3_prepare`,
 `phase_3_aggregate`, `phase_4_reports` — each calling the
 corresponding `src/` module and returning a dict.
 
+#### EVAL — must pass to proceed to Story 2.2:
+```
+RUN:      pytest tests/unit/test_pipeline.py -v 2>&1 | tail -1
+EXPECT:   ALL pass — existing tests (TestRunPhase1, TestRunPhase2) +
+          new (TestPhase1Import, TestPhase3Extract, TestPhase3Prepare, TestPhase4Reports)
+          0 failures, 0 errors
+
+RUN:      python3 -c "from src.pipeline import phase_1_import, phase_3_extract, phase_3_prepare, phase_3_aggregate, phase_4_reports"
+EXPECT:   exit code 0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** any pipeline test fails OR new functions not importable OR regression.
+
 ---
 
 ### Story 2.2: Create Pipeline CLI
@@ -804,6 +944,21 @@ class TestPipelineCLI:
         assert result.returncode != 0
 ```
 
+#### EVAL — must pass to proceed to Story 2.3:
+```
+RUN:      pytest tests/unit/test_pipeline_cli.py -v 2>&1 | tail -1
+EXPECT:   "3 passed" — 0 failed, 0 errors
+TESTS:    test_help_exits_zero, test_phase1_produces_json,
+          test_missing_phase_exits_nonzero
+
+RUN:      python3 scripts/run_pipeline.py --help
+EXPECT:   exit code 0, output contains "phase" or "usage"
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** CLI tests fail OR --help exits non-zero OR regression.
+
 ---
 
 ### Story 2.3: Slim Enrich Script
@@ -841,6 +996,24 @@ class TestEnrichRefactored:
         assert line_count < 250, \
             f"enrich.py still has {line_count} lines (expected < 250)"
 ```
+
+#### EVAL — must pass to proceed to Story 2.4:
+```
+RUN:      pytest tests/unit/test_enrich_refactored.py -v 2>&1 | tail -1
+EXPECT:   "3 passed" — 0 failed, 0 errors
+TESTS:    test_imports_from_src_browser, test_no_inline_browser_class,
+          test_line_count_reduced
+
+RUN:      grep -c "from src.browser import\|import src.browser" scripts/enrich.py
+EXPECT:   >= 1
+
+RUN:      grep -c "class BrowserConnectionManager" scripts/enrich.py
+EXPECT:   0
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** enrich still has inline browser class OR doesn't import from src OR regression.
 
 ---
 
@@ -908,6 +1081,27 @@ class TestShellScript:
         assert "pipeline_state.md" in content
 ```
 
+#### EVAL — must pass to proceed to Story 2.5:
+```
+RUN:      pytest tests/unit/test_shell_script.py -v 2>&1 | tail -1
+EXPECT:   "10 passed" — 0 failed, 0 errors
+TESTS:    test_file_exists, test_is_executable, test_starts_with_shebang,
+          test_has_strict_mode, test_bash_syntax_valid,
+          test_contains_gate_functions, test_contains_git_checkpoint,
+          test_contains_cleanup_flag, test_contains_review_stations,
+          test_contains_ralph_wiggum_state_file
+
+RUN:      bash -n scripts/run_afk_pipeline.sh
+EXPECT:   exit code 0 (valid bash syntax)
+
+RUN:      test -x scripts/run_afk_pipeline.sh && echo "OK"
+EXPECT:   "OK"
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** shell script missing, not executable, syntax errors, missing gates, or regression.
+
 ---
 
 ### Story 2.5: Phase B Gate
@@ -944,6 +1138,29 @@ pytest tests/ -v  # regression
 echo "=== Phase B Gate PASSED ==="
 ```
 
+#### EVAL — must pass to proceed to Epic 3:
+```
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass: existing + ~50 new
+          0 failures, 0 errors
+
+RUN:      python3 scripts/run_pipeline.py --help
+EXPECT:   exit code 0
+
+RUN:      bash -n scripts/run_afk_pipeline.sh
+EXPECT:   exit code 0
+
+RUN:      python3 scripts/run_pipeline.py --phase 1 --csv tests/fixtures/sample_followers.csv --db /tmp/phase_b_test.db
+EXPECT:   exit code 0, stdout is valid JSON with "inserted" key
+
+RUN:      python3 -c "from src.browser import BrowserConnectionManager; from src.candidate_extractor import extract_candidates; from src.analysis import split_batches, aggregate_results; from src.db_reports import generate_reports; from src.ai_reports import format_ai_reports; print('ALL IMPORTS OK')"
+EXPECT:   "ALL IMPORTS OK"
+
+RUN:      git log --oneline -1
+EXPECT:   Commit message contains "Phase B gate PASS"
+```
+**BLOCKED if:** any check fails. Integration test is critical — phase 1 must actually produce JSON.
+
 ---
 
 ## Epic 3: Cleanup & Final Verification (PRD Steps 13-16)
@@ -973,6 +1190,22 @@ def test_new_name_exists():
 ```
 
 After rename: `pytest tests/unit/test_report_generator.py -v` — all 1,354 lines pass.
+
+#### EVAL — must pass to proceed to Story 3.2:
+```
+RUN:      test ! -f tests/unit/test_generate_db_reports.py && echo "OLD GONE"
+EXPECT:   "OLD GONE"
+
+RUN:      test -f tests/unit/test_report_generator.py && echo "NEW EXISTS"
+EXPECT:   "NEW EXISTS"
+
+RUN:      pytest tests/unit/test_report_generator.py -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (the full 1,354-line suite, every TestClass)
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** old file still exists OR new file missing OR any report test fails.
 
 ---
 
@@ -1026,6 +1259,19 @@ class TestOldScriptsDeleted:
                 f"Dangling reference to '{pattern}' in: {result.stdout.strip()}"
 ```
 
+#### EVAL — must pass to proceed to Story 3.3:
+```
+RUN:      for f in scripts/extract_raw_candidates.py scripts/ai_analysis_orchestrator.py scripts/aggregate_and_rank.py scripts/format_reports.py scripts/generate_db_reports.py scripts/merge_top_followers.py scripts/analyze_fundraising_candidates.py; do test ! -f "$f" || echo "STILL EXISTS: $f"; done
+EXPECT:   No output (all 7 files gone)
+
+RUN:      grep -rl "extract_raw_candidates\|ai_analysis_orchestrator\|aggregate_and_rank\|format_reports\|generate_db_reports\|merge_top_followers\|analyze_fundraising" src/ scripts/ tests/ --include="*.py" | wc -l
+EXPECT:   0 (no dangling references)
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions — no test imports the deleted scripts)
+```
+**BLOCKED if:** any old script still exists OR any dangling import found OR test regression.
+
 ---
 
 ### Story 3.3: Update CLAUDE.md
@@ -1048,6 +1294,19 @@ def test_claude_md_mentions_run_pipeline():
     content = pathlib.Path("CLAUDE.md").read_text()
     assert "run_pipeline" in content
 ```
+
+#### EVAL — must pass to proceed to Story 3.4:
+```
+RUN:      grep -c "run_afk_pipeline" CLAUDE.md
+EXPECT:   >= 1
+
+RUN:      grep -c "run_pipeline" CLAUDE.md
+EXPECT:   >= 1
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass (0 regressions)
+```
+**BLOCKED if:** CLAUDE.md missing pipeline docs OR test regression.
 
 ---
 
@@ -1172,6 +1431,33 @@ class TestPhaseCDocs:
         assert "run_afk_pipeline" in content
         assert "run_pipeline" in content
 ```
+
+#### EVAL — FINAL GATE (must pass to mark BUILD COMPLETE):
+```
+RUN:      pytest tests/unit/test_phase_c_gate.py -v 2>&1 | tail -1
+EXPECT:   "~25 passed" — 0 failed, 0 errors
+          TestPhaseCSrcModules: 18 passed (6 modules × 3 checks each)
+          TestPhaseCScripts: 5 passed
+          TestPhaseCDeletions: 7 passed
+          TestPhaseCDocs: 1 passed
+
+RUN:      pytest tests/ -v 2>&1 | tail -1
+EXPECT:   ALL tests pass — full suite including all new + existing
+          Total: ~1,434+ tests, 0 failures, 0 errors
+
+RUN:      python3 scripts/run_pipeline.py --phase 1 --csv tests/fixtures/sample_followers.csv --db /tmp/final_test.db
+EXPECT:   exit code 0, valid JSON output
+
+RUN:      bash -n scripts/run_afk_pipeline.sh
+EXPECT:   exit code 0
+
+RUN:      git log --oneline -3
+EXPECT:   3 phase gate commits visible:
+          "Phase C gate PASS — ..."
+          "Phase B gate PASS — ..."
+          "Phase A gate PASS — ..."
+```
+**BUILD COMPLETE when:** all 5 commands pass. No exceptions.
 
 ---
 
