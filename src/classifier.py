@@ -300,6 +300,33 @@ def _is_school_exclusion(text):
     return bool(_SCHOOL_EXCLUSION_RE.search(text))
 
 
+# Guard-rail checks map: keyword → (presence check, false-positive regex).
+# If the keyword appears AND the regex matches, it's a false positive — but only
+# if no OTHER org keyword is present.
+_ORG_GUARD_RAILS = [
+    ("foundation", lambda t: _FOUNDATION_BEAUTY_RE.search(t)),
+    ("chapter",    lambda t: _CHAPTER_BOOK_RE.search(t)),
+    ("school",     _is_school_exclusion),
+]
+
+
+def _org_blocked_by_guard_rail(text):
+    """Return True if all org keyword matches are false positives.
+
+    Each guard rail checks whether a specific org keyword (foundation, chapter,
+    school) appears in a misleading context (beauty products, book chapters,
+    street addresses).  If the ONLY org matches are false positives, we skip
+    the organization classification.  If any other org keyword is also present,
+    we still classify as organization.
+    """
+    for keyword, is_false_positive in _ORG_GUARD_RAILS:
+        if keyword in text and is_false_positive(text):
+            other_org = [kw for kw in _ORG_KEYWORDS if kw != keyword and kw in text]
+            if not other_org:
+                return True
+    return False
+
+
 # ── Main classifier ───────────────────────────────────────────────
 def classify(profile):
     """Classify a profile into {category, subcategory, confidence}.
@@ -338,8 +365,8 @@ def classify(profile):
                 "confidence": 0.8}
 
     # Rule 3: pet_industry
-    # Skip pet_industry if account is a nonprofit — let charity rule handle it.
-    # Strong pet keywords classify without requiring is_business or commercial signal
+    # Nonprofits with pet keywords are deferred to Rule 5 (charity) to avoid
+    # misclassifying animal shelters/SPCAs as commercial pet businesses.
     if _has_any(text, _STRONG_PET_KEYWORDS) and not is_nonprofit:
         return {"category": "pet_industry",
                 "subcategory": _pet_subcategory(text),
@@ -356,41 +383,15 @@ def classify(profile):
                 "subcategory": "government",
                 "confidence": 0.85}
 
-    # Rule 4b: organization (excludes charity keywords, school address/job exclusion)
-    if _has_any(text, _ORG_KEYWORDS) and not _has_any(text, _CHARITY_KEYWORDS):
-        # Guard rails: exclude false positives from expanded keywords
-        # "foundation" in beauty/makeup context → not an org
-        if "foundation" in text and _FOUNDATION_BEAUTY_RE.search(text):
-            other_org = [kw for kw in _ORG_KEYWORDS if kw != "foundation" and kw in text]
-            if not other_org:
-                pass  # Skip — beauty context
-            else:
-                return {"category": "organization",
-                        "subcategory": _org_subcategory(text),
-                        "confidence": 0.8}
-        # "chapter" in book context → not an org
-        elif "chapter" in text and _CHAPTER_BOOK_RE.search(text):
-            other_org = [kw for kw in _ORG_KEYWORDS if kw != "chapter" and kw in text]
-            if not other_org:
-                pass  # Skip — book context
-            else:
-                return {"category": "organization",
-                        "subcategory": _org_subcategory(text),
-                        "confidence": 0.8}
-        # Check if the only org match is "school" in an excluded context
-        elif "school" in text and _is_school_exclusion(text):
-            # Check if there are other org keywords besides "school"
-            other_org = [kw for kw in _ORG_KEYWORDS if kw != "school" and kw in text]
-            if not other_org:
-                pass  # Skip organization classification
-            else:
-                return {"category": "organization",
-                        "subcategory": _org_subcategory(text),
-                        "confidence": 0.8}
-        else:
-            return {"category": "organization",
-                    "subcategory": _org_subcategory(text),
-                    "confidence": 0.8}
+    # Rule 4b: organization (excludes charity keywords)
+    # Guard rails prevent false positives: "foundation" in beauty context,
+    # "chapter" in book context, "school" in address/job-title context.
+    if (_has_any(text, _ORG_KEYWORDS)
+            and not _has_any(text, _CHARITY_KEYWORDS)
+            and not _org_blocked_by_guard_rail(text)):
+        return {"category": "organization",
+                "subcategory": _org_subcategory(text),
+                "confidence": 0.8}
 
     # Rule 5: charity (with personal-rescue exclusion)
     if _has_any(text, _CHARITY_KEYWORDS) and not _is_personal_rescue(text):
@@ -406,8 +407,10 @@ def classify(profile):
                 "confidence": 0.8}
 
     # Rule 7: media_event
-    # Guard: if the ONLY media match is "event"/"events" and the account is
-    # a Hawaii business, defer to business_local (Rule 8) instead.
+    # Many Hawaii businesses mention "event" (catering, venues, etc.) without
+    # being media/event companies.  If "event" is the ONLY media keyword and
+    # the account is a Hawaii business or nonprofit, skip to a more accurate
+    # downstream rule (business_local or charity).
     if _has_any(text, _MEDIA_KEYWORDS):
         _media_matches = [kw for kw in _MEDIA_KEYWORDS if kw in text]
         _only_event = all(m in ("event",) for m in _media_matches)
