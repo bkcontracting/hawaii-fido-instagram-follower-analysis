@@ -12,6 +12,7 @@ data/top_25_fundraising.json
 data/all_analyzed_profiles.json 
 
 
+.coverage
 .worktrees/
 .playwright-mcp/
 .playwright/
