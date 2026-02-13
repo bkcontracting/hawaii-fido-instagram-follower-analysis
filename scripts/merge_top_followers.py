@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Merge fundraising_outreach.csv with 6 missed high-value prospects from
-db_fundraising_outreach.csv into a combined 31-row CSV ranked by 4-axis score."""
+"""Merge fundraising_outreach.csv (AI top 25, kept first in original order)
+with 6 missed high-value prospects from db_fundraising_outreach.csv appended
+at the end — 31 rows total."""
 
 import csv
 import os
@@ -81,7 +82,12 @@ def main():
         for row in csv.DictReader(f):
             db_lookup[row["Handle"]] = row
 
-    # Build rows for the 6 missed prospects
+    # Keep AI top-25 in their original order (ranks 1-25)
+    for i, row in enumerate(rows, 1):
+        row["Rank"] = i
+
+    # Append the 6 missed prospects as ranks 26-31
+    miss_rows = []
     for handle, scores in MISSES.items():
         db = db_lookup[handle]
         new_row = {
@@ -100,14 +106,13 @@ def main():
             "Website": db.get("Website", ""),
             "Bio": db.get("Bio", ""),
         }
-        rows.append(new_row)
+        miss_rows.append(new_row)
 
-    # Sort descending by Total Score
-    rows.sort(key=lambda r: int(r["Total Score"]), reverse=True)
-
-    # Re-rank
-    for i, row in enumerate(rows, 1):
-        row["Rank"] = i
+    # Sort the 6 misses by score descending, then append
+    miss_rows.sort(key=lambda r: int(r["Total Score"]), reverse=True)
+    for row in miss_rows:
+        row["Rank"] = len(rows) + 1
+        rows.append(row)
 
     # Write combined CSV
     with open(OUT_CSV, "w", newline="", encoding="utf-8") as f:
