@@ -1352,3 +1352,77 @@ class TestConstants:
                          "MEMBER_PRESENTATION", "INDIVIDUAL_DONOR", "DOOR_OPENER"}
         mapped_types = set(_CATEGORY_TO_OUTREACH.values())
         assert mapped_types == ai_plan_types
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Additional generate_reports coverage
+# ══════════════════════════════════════════════════════════════════════
+
+class TestGenerateReportsPrintOutput:
+    """Cover print statements and edge cases in generate_reports."""
+
+    def _make_db(self, tmp_path, rows):
+        db = str(tmp_path / "test.db")
+        _create_test_db(db, rows)
+        return db
+
+    def _output_paths(self, tmp_path):
+        return (
+            str(tmp_path / "recs.md"),
+            str(tmp_path / "fund.csv"),
+            str(tmp_path / "mktg.csv"),
+        )
+
+    def test_loading_message_printed(self, tmp_path, capsys):
+        """generate_reports prints loading message."""
+        db = self._make_db(tmp_path, [
+            _row(handle="biz1", category="business_local", priority_score=70),
+        ])
+        md, fc, mc = self._output_paths(tmp_path)
+        generate_reports(db, md, fc, mc)
+        captured = capsys.readouterr()
+        assert "Loading profiles from database..." in captured.out
+        assert "Loaded 1 completed profiles" in captured.out
+
+    def test_exclusion_counts_printed(self, tmp_path, capsys):
+        """Exclusion counts are printed in output."""
+        db = self._make_db(tmp_path, [
+            _row(handle="biz1", category="business_local", priority_score=70),
+            _row(handle="spam1", category="spam_bot", priority_score=0),
+        ])
+        md, fc, mc = self._output_paths(tmp_path)
+        generate_reports(db, md, fc, mc)
+        captured = capsys.readouterr()
+        assert "EXCLUDE_spam: 1" in captured.out
+
+    def test_no_fundraising_prospects_message(self, tmp_path, capsys):
+        """When all are excluded from fundraising, print 'no prospects' message."""
+        db = self._make_db(tmp_path, [
+            _row(handle="spam1", category="spam_bot", priority_score=0, follower_count=10),
+        ])
+        md, fc, mc = self._output_paths(tmp_path)
+        generate_reports(db, md, fc, mc)
+        captured = capsys.readouterr()
+        assert "No scoreable fundraising prospects found." in captured.out
+
+    def test_no_marketing_partners_message(self, tmp_path, capsys):
+        """When all are excluded from marketing, print 'no partners' message."""
+        db = self._make_db(tmp_path, [
+            _row(handle="spam1", category="spam_bot", priority_score=0, follower_count=10),
+        ])
+        md, fc, mc = self._output_paths(tmp_path)
+        generate_reports(db, md, fc, mc)
+        captured = capsys.readouterr()
+        assert "No scoreable marketing partners found." in captured.out
+
+    def test_marketing_display_name_none_fallback(self, tmp_path):
+        """Marketing report uses handle as fallback when display_name is None."""
+        db = self._make_db(tmp_path, [
+            _row(handle="fallback_handle", display_name=None,
+                 category="business_local", priority_score=70, follower_count=5000),
+        ])
+        md, fc, mc = self._output_paths(tmp_path)
+        generate_reports(db, md, fc, mc)
+        content = open(md).read()
+        # In the marketing section, the name should fallback to handle
+        assert "fallback_handle" in content

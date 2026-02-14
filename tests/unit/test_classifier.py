@@ -1,6 +1,21 @@
 """Tests for src/classifier.py — 13 decision rules in priority order."""
 import pytest
-from src.classifier import classify
+from src.classifier import (
+    classify,
+    _combined_text,
+    _has_any,
+    _has_commercial_signal,
+    _has_service_dog_signal,
+    _has_nonprofit_signal,
+    _service_dog_subcategory,
+    _pet_subcategory,
+    _bank_subcategory,
+    _org_subcategory,
+    _media_subcategory,
+    _business_subcategory,
+    _is_personal_rescue,
+    _is_school_exclusion,
+)
 
 
 # ── Helper to build profile dicts ──────────────────────────────────
@@ -1038,3 +1053,373 @@ class TestFacilityDogKeyword:
         r = classify(_profile(bio="Certified facility dog program"))
         assert r["category"] == "service_dog_aligned"
         assert r["subcategory"] == "facility"
+
+
+# ── Direct tests for internal helper functions ───────────────────
+
+
+class TestCombinedText:
+    """Direct tests for _combined_text() helper."""
+
+    def test_all_fields_present(self):
+        text = _combined_text({"handle": "Alice", "display_name": "Bob", "bio": "Hello"})
+        assert text == "alice bob hello"
+
+    def test_none_fields(self):
+        text = _combined_text({"handle": None, "display_name": None, "bio": None})
+        assert text == "  "
+
+    def test_missing_keys(self):
+        text = _combined_text({})
+        assert text == "  "
+
+    def test_lowercase(self):
+        text = _combined_text({"handle": "ABC", "display_name": "DEF", "bio": "GHI"})
+        assert text == "abc def ghi"
+
+
+class TestHasAny:
+    """Direct tests for _has_any() helper."""
+
+    def test_match(self):
+        assert _has_any("dog trainer in hawaii", ["trainer"]) is True
+
+    def test_no_match(self):
+        assert _has_any("just a person", ["trainer", "groomer"]) is False
+
+    def test_empty_keywords(self):
+        assert _has_any("some text", []) is False
+
+    def test_empty_text(self):
+        assert _has_any("", ["trainer"]) is False
+
+
+class TestHasCommercialSignal:
+    """Direct tests for _has_commercial_signal() — each regex pattern."""
+
+    def test_shop(self):
+        assert _has_commercial_signal("pet shop") is True
+
+    def test_shops(self):
+        assert _has_commercial_signal("pet shops") is True
+
+    def test_store(self):
+        assert _has_commercial_signal("pet store") is True
+
+    def test_stores(self):
+        assert _has_commercial_signal("pet stores") is True
+
+    def test_service(self):
+        assert _has_commercial_signal("dog service") is True
+
+    def test_services(self):
+        assert _has_commercial_signal("dog services") is True
+
+    def test_clinic(self):
+        assert _has_commercial_signal("vet clinic") is True
+
+    def test_clinics(self):
+        assert _has_commercial_signal("vet clinics") is True
+
+    def test_supply(self):
+        assert _has_commercial_signal("pet supply") is True
+
+    def test_inc(self):
+        assert _has_commercial_signal("pet inc") is True
+
+    def test_llc(self):
+        assert _has_commercial_signal("pet llc") is True
+
+    def test_co_with_period(self):
+        assert _has_commercial_signal("brewing co.") is True
+
+    def test_no_signal(self):
+        assert _has_commercial_signal("just a random bio") is False
+
+    def test_co_without_period_not_commercial(self):
+        assert _has_commercial_signal("based in co serving colorado") is False
+
+
+class TestHasServiceDogSignal:
+    """Direct tests for _has_service_dog_signal()."""
+
+    def test_service_dog_regex_match(self):
+        assert _has_service_dog_signal("we train service dogs") is True
+
+    def test_full_service_dog_grooming_excluded(self):
+        assert _has_service_dog_signal("full service dog grooming") is False
+
+    def test_therapy_dog_other_keyword(self):
+        assert _has_service_dog_signal("therapy dog team") is True
+
+    def test_assistance_dog_other_keyword(self):
+        assert _has_service_dog_signal("assistance dog provider") is True
+
+    def test_no_match(self):
+        assert _has_service_dog_signal("just a regular bio") is False
+
+
+class TestHasNonprofitSignal:
+    """Direct tests for _has_nonprofit_signal()."""
+
+    def test_nonprofit(self):
+        assert _has_nonprofit_signal("we are a nonprofit") is True
+
+    def test_501c(self):
+        assert _has_nonprofit_signal("501c3 organization") is True
+
+    def test_non_profit(self):
+        assert _has_nonprofit_signal("a non-profit org") is True
+
+    def test_no_match(self):
+        assert _has_nonprofit_signal("just a business") is False
+
+
+class TestServiceDogSubcategoryDirect:
+    """Direct tests for _service_dog_subcategory()."""
+
+    def test_emotional_support(self):
+        assert _service_dog_subcategory("emotional support animal") == "emotional_support"
+
+    def test_general_fallback(self):
+        assert _service_dog_subcategory("some working dog text") == "general"
+
+
+class TestPetSubcategoryDirect:
+    """Direct tests for _pet_subcategory() — uncovered branches."""
+
+    def test_pet_food(self):
+        assert _pet_subcategory("organic pet food brand") == "pet_food"
+
+    def test_pet_sitting(self):
+        assert _pet_subcategory("professional pet sitting") == "pet_care"
+
+    def test_dog_walking(self):
+        assert _pet_subcategory("dog walking daily") == "pet_care"
+
+    def test_rehabilitation(self):
+        assert _pet_subcategory("pet rehab center") == "rehabilitation"
+
+    def test_animal_rehab(self):
+        assert _pet_subcategory("animal rehab facility") == "rehabilitation"
+
+    def test_general_fallback(self):
+        assert _pet_subcategory("some text about paws") == "general"
+
+
+class TestBankSubcategoryDirect:
+    """Direct tests for _bank_subcategory()."""
+
+    def test_general_fallback(self):
+        assert _bank_subcategory("some financial text") == "general"
+
+
+class TestOrgSubcategoryDirect:
+    """Direct tests for _org_subcategory()."""
+
+    def test_initiative(self):
+        assert _org_subcategory("community initiative for change") == "community_group"
+
+    def test_chapter(self):
+        assert _org_subcategory("local chapter meeting") == "community_group"
+
+    def test_default_fallback(self):
+        assert _org_subcategory("some random org text") == "community_group"
+
+
+class TestMediaSubcategoryDirect:
+    """Direct tests for _media_subcategory()."""
+
+    def test_general_fallback(self):
+        assert _media_subcategory("some random thing about town") == "general"
+
+
+class TestBusinessSubcategoryDirect:
+    """Direct tests for _business_subcategory()."""
+
+    def test_service_via_plumb(self):
+        assert _business_subcategory("local plumber services") == "service"
+
+    def test_restaurant_via_coffee(self):
+        assert _business_subcategory("best coffee in town") == "restaurant"
+
+    def test_restaurant_via_food(self):
+        assert _business_subcategory("great food joint") == "restaurant"
+
+    def test_general_fallback(self):
+        assert _business_subcategory("a local establishment") == "general"
+
+
+class TestIsPersonalRescueDirect:
+    """Direct tests for _is_personal_rescue()."""
+
+    def test_no_rescue_in_text(self):
+        assert _is_personal_rescue("just a dog lover") is False
+
+    def test_strong_charity_overrides(self):
+        """Strong charity keyword like 'humane' prevents personal rescue detection."""
+        assert _is_personal_rescue("rescue humane society") is False
+
+    def test_personal_pattern_match(self):
+        assert _is_personal_rescue("rescue pup living the life") is True
+
+    def test_org_foundation_overrides(self):
+        assert _is_personal_rescue("rescue foundation for animals") is False
+
+    def test_society_overrides(self):
+        assert _is_personal_rescue("rescue society of the pacific") is False
+
+    def test_network_overrides(self):
+        assert _is_personal_rescue("rescue network nationwide") is False
+
+    def test_fallback_true_bare_rescue(self):
+        """Bare 'rescue' without org or charity keywords defaults to personal."""
+        assert _is_personal_rescue("my rescue is the sweetest") is True
+
+
+class TestIsSchoolExclusionDirect:
+    """Direct tests for _is_school_exclusion()."""
+
+    def test_no_school_in_text(self):
+        assert _is_school_exclusion("just a club") is False
+
+    def test_school_street_address(self):
+        assert _is_school_exclusion("123 school st honolulu") is True
+
+    def test_school_teacher(self):
+        assert _is_school_exclusion("school teacher and mentor") is True
+
+    def test_school_nurse(self):
+        assert _is_school_exclusion("school nurse at elementary") is True
+
+    def test_school_without_exclusion_pattern(self):
+        """'School' alone without address/job pattern returns False."""
+        assert _is_school_exclusion("punahou school alumni") is False
+
+
+# ── Additional classify() branch coverage ────────────────────────
+
+
+class TestClassifyAdditionalBranches:
+    """Tests for specific classify() rule branches not covered above."""
+
+    def test_corporate_via_is_biz_and_25k_followers(self):
+        """is_business + 25k+ followers triggers corporate even without keywords."""
+        r = classify(_profile(is_business=True, follower_count=25000,
+                              bio="Our company values"))
+        assert r["category"] == "corporate"
+
+    def test_pet_industry_weak_keyword_with_commercial_signal(self):
+        """Weak pet keyword + commercial signal triggers pet_industry."""
+        r = classify(_profile(bio="Pet collar supply store", is_business=False))
+        assert r["category"] == "pet_industry"
+
+    def test_spam_bot_none_follower_count(self):
+        """spam_bot rule requires non-None counts — None should skip."""
+        r = classify(_profile(follower_count=None, following_count=5000,
+                              post_count=2, is_business=False))
+        assert r["category"] != "spam_bot"
+
+    def test_spam_bot_none_following_count(self):
+        r = classify(_profile(follower_count=50, following_count=None,
+                              post_count=2, is_business=False))
+        assert r["category"] != "spam_bot"
+
+    def test_spam_bot_none_post_count(self):
+        r = classify(_profile(follower_count=50, following_count=5000,
+                              post_count=None, is_business=False))
+        assert r["category"] != "spam_bot"
+
+    def test_personal_passive_boundary_at_50(self):
+        """post_count=50 exactly should be personal_passive (not engaged)."""
+        r = classify(_profile(post_count=50, is_business=False))
+        assert r["category"] == "personal_passive"
+
+    def test_personal_engaged_boundary_at_51(self):
+        """post_count=51 should be personal_engaged."""
+        r = classify(_profile(post_count=51, is_business=False))
+        assert r["category"] == "personal_engaged"
+
+    def test_unknown_fallback_none_post_count(self):
+        """None post_count + None followers + None following → unknown."""
+        r = classify(_profile(post_count=None, follower_count=None,
+                              following_count=None, is_business=False))
+        assert r["category"] == "unknown"
+        assert r["confidence"] == 0.3
+
+
+# ── Additional direct helper tests for remaining uncovered lines ──
+
+
+class TestPetSubcategoryDogTrick:
+    """Cover L205: 'dog trick' → 'trainer'."""
+
+    def test_dog_trick(self):
+        assert _pet_subcategory("dog trick performance") == "trainer"
+
+
+class TestOrgSubcategoryGovernment:
+    """Cover L235: government keywords → 'government'."""
+
+    def test_government_organization(self):
+        assert _org_subcategory("government organization meeting") == "government"
+
+    def test_military(self):
+        assert _org_subcategory("military veterans support") == "government"
+
+
+class TestBusinessSubcategorySalon:
+    """Cover L277: salon/barbershop → 'service'."""
+
+    def test_salon(self):
+        assert _business_subcategory("beauty salon appointments") == "service"
+
+    def test_barbershop_matches_retail_due_to_shop_substring(self):
+        """'barbershop' contains 'shop', so the retail check fires first."""
+        assert _business_subcategory("local barbershop in town") == "retail"
+
+
+class TestIsPersonalRescueFallbackTrue:
+    """Cover L293: bare 'rescue' without personal regex or org keywords → True."""
+
+    def test_rescue_without_personal_pattern_or_org_keywords(self):
+        """'rescue' present, no personal regex match, no org keywords → fallback True."""
+        assert _is_personal_rescue("rescue hero of the block") is True
+
+
+# ── Additional classify() tests for org guard-rails ──────────────
+
+
+class TestClassifyOrgGuardRails:
+    """Cover org classification guard-rail branches (L368, L377, L387)."""
+
+    def test_foundation_beauty_context_with_other_org_keyword(self):
+        """Foundation in beauty context + another org keyword → still org (L368)."""
+        r = classify(_profile(bio="Foundation shade makeup club association",
+                              is_business=False, is_hawaii=True))
+        assert r["category"] == "organization"
+
+    def test_chapter_book_context_with_other_org_keyword(self):
+        """Chapter in book context + another org keyword → still org (L377)."""
+        r = classify(_profile(bio="chapter 5 book review rotary members",
+                              is_business=False, is_hawaii=True))
+        assert r["category"] == "organization"
+
+    def test_school_exclusion_with_other_org_keyword(self):
+        """School in address context + another org keyword → still org (L387)."""
+        r = classify(_profile(bio="Located on school st serving our rotary",
+                              is_business=False, is_hawaii=True))
+        assert r["category"] == "organization"
+
+
+class TestClassifyMediaEventSkipNonprofit:
+    """Cover L417: only 'event' match + nonprofit → skip media_event."""
+
+    def test_event_with_nonprofit_skips_media(self):
+        """'non-profit' triggers is_nonprofit but not _CHARITY_KEYWORDS
+        (which has 'nonprofit' without hyphen). With 'event' as the only
+        media keyword, L417 fires and skips media_event classification."""
+        r = classify(_profile(bio="non-profit community event support",
+                              is_business=False, is_hawaii=False))
+        # Should NOT be media_event — nonprofit event defers
+        assert r["category"] != "media_event"

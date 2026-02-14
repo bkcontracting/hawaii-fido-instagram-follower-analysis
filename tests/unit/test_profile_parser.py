@@ -167,3 +167,72 @@ class TestParseProfilePage:
         result = parse_profile_page("Please try again later")
         assert result["page_state"] == "rate_limited"
         assert result["follower_count"] is None
+
+
+# ── Additional parse_count coverage ──────────────────────────────────
+
+class TestParseCountNonString:
+    """Cover the `not isinstance(text, str)` branch."""
+
+    def test_integer_input_returns_none(self):
+        assert parse_count(42) is None
+
+    def test_float_input_returns_none(self):
+        assert parse_count(3.14) is None
+
+    def test_list_input_returns_none(self):
+        assert parse_count([]) is None
+
+
+# ── Additional detect_page_state coverage ────────────────────────────
+
+class TestDetectPageStateAdditional:
+    """Cover branches not exercised by existing tests."""
+
+    def test_suspended_via_violat_keyword(self):
+        """'suspended' + 'violat' path (second branch of OR)."""
+        assert detect_page_state("This page is suspended for policy violating behavior") == "suspended"
+
+    def test_rate_limit_keyword(self):
+        """'rate limit' keyword path."""
+        assert detect_page_state("You hit the rate limit") == "rate_limited"
+
+
+# ── Additional parse_profile_page coverage ───────────────────────────
+
+class TestParseProfilePageAdditional:
+    """Cover additional branches in parse_profile_page."""
+
+    def test_bio_over_500_chars_not_extracted(self):
+        """Bio longer than 500 characters should not be extracted."""
+        long_bio = "A" * 501
+        text = f"10 posts 20 followers 5 following\n{long_bio}\nsome posts"
+        result = parse_profile_page(text)
+        assert result["bio"] == ""
+
+    def test_followed_by_line_stripped(self):
+        """'Followed by ...' lines should be removed from bio."""
+        text = (
+            "10 posts 20 followers 5 following\n"
+            "My cool bio\n"
+            "Followed by user1, user2\n"
+            "some posts"
+        )
+        result = parse_profile_page(text)
+        assert "Followed by" not in result["bio"]
+        assert "My cool bio" in result["bio"]
+
+    def test_business_via_shop_now(self):
+        text = "10 posts 20 followers 5 following\nShop Now\nsome posts"
+        result = parse_profile_page(text)
+        assert result["is_business"] is True
+
+    def test_business_via_view_shop(self):
+        text = "10 posts 20 followers 5 following\nView Shop\nsome posts"
+        result = parse_profile_page(text)
+        assert result["is_business"] is True
+
+    def test_business_via_shopping(self):
+        text = "10 posts 20 followers 5 following\nShopping available\nsome posts"
+        result = parse_profile_page(text)
+        assert result["is_business"] is True

@@ -618,3 +618,65 @@ class TestReportOutput:
         captured = capsys.readouterr()
         # Score delta = 80 - 10 = 70, definitely > 10
         assert "Score Changes > 10 Points" in captured.out
+
+
+# ── Additional report coverage ───────────────────────────────────────
+
+class TestHawaiiDetectionChange:
+    """Cover the hawaii_changed flag and Hawaii Detection Changes report."""
+
+    def test_hawaii_detection_change_in_report(self, tmp_path, capsys):
+        """When is_hawaii changes, 'Hawaii Detection Changes' section is printed."""
+        db_path = _create_db(tmp_path, rows=[
+            {"handle": "hawaii_change_user",
+             "bio": "Honolulu Hawaii dog lover",
+             "is_business": False, "is_hawaii": False,
+             "category": "personal_passive", "subcategory": "general",
+             "confidence": 0.5, "priority_score": 0, "priority_reason": "",
+             "status": "completed"},
+        ])
+        rescore(db_path, dry_run=False)
+        captured = capsys.readouterr()
+        assert "Hawaii Detection Changes" in captured.out
+        assert "hawaii_change_user" in captured.out
+
+
+class TestNegativeScoreDelta:
+    """Cover negative delta_str formatting in the report."""
+
+    def test_negative_score_delta_in_report(self, tmp_path, capsys):
+        """A score decrease should show a negative delta."""
+        db_path = _create_db(tmp_path, rows=[
+            {"handle": "downgrade_user", "bio": "Just a person",
+             "is_business": False, "is_hawaii": False,
+             "follower_count": 100, "following_count": 50, "post_count": 10,
+             "category": "personal_passive", "subcategory": "general",
+             "confidence": 0.5, "priority_score": 50, "priority_reason": "old(+50)",
+             "status": "completed"},
+        ])
+        rescore(db_path, dry_run=False)
+        captured = capsys.readouterr()
+        # Score goes from 50 to 0 (delta=-50)
+        assert "Score Changes > 10 Points" in captured.out
+        assert "-" in captured.out  # negative delta
+
+
+class TestTierUpgrade:
+    """Cover New Tier 1/2 Accounts section."""
+
+    def test_tier_upgrade_from_zero(self, tmp_path, capsys):
+        """Upgrade from score=0 to >=60 shows in New Tier 1/2 section."""
+        db_path = _create_db(tmp_path, rows=[
+            {"handle": "tier_upgrade_user",
+             "bio": "First Hawaiian Bank Honolulu Hawaii",
+             "display_name": "Hawaiian Bank",
+             "is_business": True, "is_hawaii": True,
+             "follower_count": 10000,
+             "category": "personal_passive", "subcategory": "general",
+             "confidence": 0.5, "priority_score": 0, "priority_reason": "",
+             "status": "completed"},
+        ])
+        rescore(db_path, dry_run=False)
+        captured = capsys.readouterr()
+        assert "New Tier 1/2 Accounts" in captured.out
+        assert "tier_upgrade_user" in captured.out
