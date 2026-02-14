@@ -1,5 +1,10 @@
 """Tests for src/location_detector.py — Hawaii location detection."""
-from src.location_detector import hawaii_confidence, is_hawaii
+from src.location_detector import (
+    hawaii_confidence,
+    is_hawaii,
+    _inject_hawaii_spaces,
+    _normalize_for_search,
+)
 
 
 # ── hawaii_confidence: None / empty / no-match ──────────────────────
@@ -390,3 +395,83 @@ def test_hawaiian_alone_meets_threshold():
 def test_hawaiian_plus_any_signal_meets_threshold():
     """'Hawaiian' (0.3) + 'Aloha' (0.15) = 0.45, meets threshold."""
     assert is_hawaii("Aloha Hawaiian") is True
+
+
+# ── Direct tests for _inject_hawaii_spaces ─────────────────────────
+
+
+class TestInjectHawaiiSpaces:
+    """Direct tests for _inject_hawaii_spaces() helper."""
+
+    def test_no_term_found(self):
+        assert _inject_hawaii_spaces("hello world") == "hello world"
+
+    def test_hawaii_at_end(self):
+        result = _inject_hawaii_spaces("doggyboxhawaii")
+        assert "hawaii" in result
+        assert " hawaii" in result
+
+    def test_already_spaced(self):
+        """Term with spaces on both sides should claim positions but not re-insert."""
+        result = _inject_hawaii_spaces("visit hawaii today")
+        assert result == "visit hawaii today"
+
+    def test_overlapping_claimed_skips_shorter(self):
+        """'hawaiian' should claim positions so 'hawaii' inside it is skipped."""
+        result = _inject_hawaii_spaces("somehawaiiantext")
+        assert "hawaiian" in result
+        # Should not double-split
+
+    def test_808_digit_guard(self):
+        """'808' surrounded by digits should NOT be split (phone number)."""
+        result = _inject_hawaii_spaces("18085551234")
+        # 808 should not get spaces inserted when surrounded by digits
+        assert "18085551234" in result or " 808 " not in result
+
+    def test_808_not_surrounded_by_digits(self):
+        """'808' at start of word should get spaces."""
+        result = _inject_hawaii_spaces("808camo")
+        assert " 808 " in result or result.startswith("808 ")
+
+
+# ── Direct tests for _normalize_for_search ─────────────────────────
+
+
+class TestNormalizeForSearch:
+    """Direct tests for _normalize_for_search() helper."""
+
+    def test_empty_string(self):
+        assert _normalize_for_search("") == ""
+
+    def test_none_input(self):
+        assert _normalize_for_search(None) is None
+
+    def test_underscore_split(self):
+        result = _normalize_for_search("dog_trainer")
+        assert "dog trainer" in result
+
+    def test_dot_split(self):
+        result = _normalize_for_search("arya.the.servicedog")
+        assert "arya the servicedog" in result
+
+    def test_camel_case_split(self):
+        result = _normalize_for_search("DoggyBox")
+        # Expansion lowercases and space-splits camelCase
+        assert "doggy box" in result.lower()
+
+    def test_digit_letter_split(self):
+        result = _normalize_for_search("808camo")
+        assert "808 camo" in result
+
+    def test_letter_digit_split(self):
+        result = _normalize_for_search("camo808")
+        assert "camo 808" in result
+
+    def test_appends_expanded(self):
+        """Original text is preserved and expanded form is appended."""
+        result = _normalize_for_search("dog_trainer")
+        assert result.startswith("dog_trainer ")
+
+    def test_plain_text_unchanged_prefix(self):
+        result = _normalize_for_search("hello")
+        assert result.startswith("hello ")

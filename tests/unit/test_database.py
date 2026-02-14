@@ -458,3 +458,55 @@ def test_get_status_counts_empty(tmp_path):
 
     counts = get_status_counts(db_path)
     assert counts == {}
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+def test_connect_wal_mode(tmp_path):
+    """_connect sets WAL journal mode."""
+    from src.database import _connect, init_db
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    conn = _connect(db_path)
+    mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
+    conn.close()
+    assert mode == "wal"
+
+
+def test_update_follower_single_column(tmp_path):
+    """update_follower works with a single column update."""
+    from src.database import init_db, insert_followers, update_follower
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    insert_followers(db_path, SAMPLE_FOLLOWERS[:1])
+
+    update_follower(db_path, "alice_dog", {"bio": "Updated bio"})
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT bio FROM followers WHERE handle = ?", ("alice_dog",)
+    ).fetchone()
+    conn.close()
+    assert row["bio"] == "Updated bio"
+
+
+def test_insert_followers_preserves_order(tmp_path):
+    """insert_followers inserts rows in the order given."""
+    from src.database import init_db, insert_followers
+
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    insert_followers(db_path, SAMPLE_FOLLOWERS)
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT handle FROM followers ORDER BY id").fetchall()
+    conn.close()
+
+    handles = [r["handle"] for r in rows]
+    assert handles == ["alice_dog", "bob_pup", "carol_k9"]

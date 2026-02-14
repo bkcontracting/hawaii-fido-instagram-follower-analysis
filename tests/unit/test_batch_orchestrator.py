@@ -1,9 +1,11 @@
 """Tests for src/batch_orchestrator.py — batch processing with retry logic."""
 import os
 import datetime
+import sqlite3
+from unittest.mock import patch, MagicMock
 import pytest
 from src.database import init_db, insert_followers, update_follower, get_status_counts, get_pending
-from src.batch_orchestrator import create_batch, process_batch, run_with_retries, run_all
+from src.batch_orchestrator import create_batch, process_batch, run_with_retries, run_all, _connect
 
 
 def _setup_db(tmp_path, count=5):
@@ -360,3 +362,82 @@ class TestRunAll:
         assert result["total_completed"] == 2
         counts = get_status_counts(db)
         assert counts.get("completed") == 5
+
+
+# ── Direct _connect test ─────────────────────────────────────────
+
+class TestConnectHelper:
+    def test_connect_returns_connection(self, tmp_path):
+        db = str(tmp_path / "connect.db")
+        conn = _connect(db)
+        assert isinstance(conn, sqlite3.Connection)
+        conn.close()
+
+    def test_connect_uses_row_factory(self, tmp_path):
+        db = str(tmp_path / "factory.db")
+        conn = _connect(db)
+        assert conn.row_factory is sqlite3.Row
+        conn.close()
+
+
+# ── Additional process_batch page_state coverage ─────────────────
+
+class TestProcessBatchPageStates:
+    def test_unknown_page_state_raises_error(self, tmp_path):
+        """Unknown page_state (not normal/not_found/suspended/rate_limited/login_required)
+        should raise RuntimeError caught by the except block."""
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def unknown_state_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "weird_state"}
+
+        result = process_batch(db, batch, unknown_state_fetcher)
+        assert result["errors"] == 1
+        from src.database import _connect as db_connect
+        conn = db_connect(db)
+        row = conn.execute("SELECT error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        assert "unknown_page_state" in dict(row)["error_message"]
+
+    def test_page_state_none_defaults_to_normal(self, tmp_path):
+        """page_state=None should default to 'normal' via `or 'normal'`."""
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def none_state_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": None}
+
+        result = process_batch(db, batch, none_state_fetcher)
+        assert result["completed"] == 1
+        assert result["errors"] == 0
+
+    def test_rate_limited_error_message_in_db(self, tmp_path):
+        """rate_limited page_state should store 'rate_limited' as error_message."""
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def rate_limited_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "rate_limited"}
+
+        process_batch(db, batch, rate_limited_fetcher)
+        from src.database import _connect as db_connect
+        conn = db_connect(db)
+        row = conn.execute("SELECT error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        assert dict(row)["error_message"] == "rate_limited"
+
+    def test_login_required_error_message_in_db(self, tmp_path):
+        """login_required page_state should store 'login_required' as error_message."""
+        db = _setup_db(tmp_path, count=1)
+        batch = create_batch(db)
+
+        def login_required_fetcher(handle, url):
+            return {**_mock_fetcher(handle, url), "page_state": "login_required"}
+
+        process_batch(db, batch, login_required_fetcher)
+        from src.database import _connect as db_connect
+        conn = db_connect(db)
+        row = conn.execute("SELECT error_message FROM followers WHERE handle='user_0'").fetchone()
+        conn.close()
+        assert dict(row)["error_message"] == "login_required"

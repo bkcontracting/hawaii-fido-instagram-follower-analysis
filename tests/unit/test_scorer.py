@@ -428,3 +428,58 @@ class TestDogCommunityBioExpansion:
         """Bio mentioning 'pup parent' should get dogs_pets_bio bonus."""
         r = score(_profile(bio="Pup parent | Hawaii life"))
         assert "dogs_pets_bio(+10)" in r["priority_reason"]
+
+
+# ── Additional coverage for category branches ────────────────────
+
+class TestCategoryFallthrough:
+    """Test categories that don't match any elif branch (no category bonus)."""
+
+    def test_personal_engaged_no_category_bonus(self):
+        """personal_engaged should not get any category bonus."""
+        r = score(_profile(category="personal_engaged"))
+        # No category-specific reason in output
+        for keyword in ["service_dog", "bank", "corporate", "pet", "org",
+                        "elected", "local_biz", "national_biz", "influencer", "media"]:
+            assert keyword not in r["priority_reason"]
+
+    def test_personal_passive_no_category_bonus(self):
+        """personal_passive should not get any category bonus."""
+        r = score(_profile(category="personal_passive"))
+        for keyword in ["service_dog", "bank", "corporate", "pet", "org",
+                        "elected", "local_biz", "national_biz", "influencer", "media"]:
+            assert keyword not in r["priority_reason"]
+
+
+class TestFollowerCountNone:
+    """Test follower_count=None path (or 0 fallback)."""
+
+    def test_none_follower_count_no_reach_bonus(self):
+        """follower_count=None should not trigger any reach bonus."""
+        r = score(_profile(follower_count=None))
+        assert "reach" not in r["priority_reason"]
+
+    def test_none_post_count_no_active_posting(self):
+        """post_count=None should not trigger active_posting bonus."""
+        r = score(_profile(post_count=None))
+        assert "active_posting" not in r["priority_reason"]
+
+
+class TestDonorLanguagePatterns:
+    """Test each individual donor language regex pattern."""
+
+    def test_partnership(self):
+        r = score(_profile(bio="We value our partnership"))
+        assert "donor_language" in r["priority_reason"]
+
+    def test_sponsor(self):
+        r = score(_profile(bio="Proud sponsor of community"))
+        assert "donor_language" in r["priority_reason"]
+
+    def test_support_local(self):
+        r = score(_profile(bio="We support local business"))
+        assert "donor_language" in r["priority_reason"]
+
+    def test_donate(self):
+        r = score(_profile(bio="Donate to help our mission"))
+        assert "donor_language" in r["priority_reason"]
