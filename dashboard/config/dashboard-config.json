@@ -1,0 +1,115 @@
+{
+  "dashboardTitle": "Hawaii Fi-Do Follower Analysis",
+  "googleWorkspaceDomain": "hawaiifido.org",
+  "tabs": [
+    {
+      "id": "fundraising",
+      "label": "Fundraising Outreach",
+      "csvFile": "db_fundraising_outreach.csv",
+      "description": "Top fundraising prospects with suggested ask amounts",
+      "defaultSort": {
+        "column": "Priority Score",
+        "direction": "desc"
+      },
+      "columns": {
+        "display": [
+          "Rank",
+          "Handle",
+          "Display Name",
+          "Followers",
+          "Entity Type",
+          "Category",
+          "Hawaii-Based",
+          "Priority Score",
+          "Outreach Type",
+          "Suggested Ask"
+        ],
+        "searchable": [
+          "Handle",
+          "Display Name",
+          "Bio",
+          "Category",
+          "Entity Type"
+        ],
+        "sortable": [
+          "Rank",
+          "Priority Score",
+          "Followers",
+          "Entity Type"
+        ]
+      }
+    },
+    {
+      "id": "marketing",
+      "label": "Marketing Partners",
+      "csvFile": "db_marketing_partners.csv",
+      "description": "Top marketing partnership opportunities",
+      "defaultSort": {
+        "column": "Priority Score",
+        "direction": "desc"
+      },
+      "columns": {
+        "display": [
+          "Rank",
+          "Handle",
+          "Display Name",
+          "Followers",
+          "Entity Type",
+          "Hawaii-Based",
+          "Priority Score"
+        ],
+        "searchable": [
+          "Handle",
+          "Display Name",
+          "Bio",
+          "Entity Type"
+        ],
+        "sortable": [
+          "Rank",
+          "Priority Score",
+          "Followers"
+        ]
+      }
+    },
+    {
+      "id": "combined",
+      "label": "Combined Analysis",
+      "csvFile": "combined_top_followers.csv",
+      "description": "Comprehensive top follower rankings with detailed scoring",
+      "defaultSort": {
+        "column": "Total Score",
+        "direction": "desc"
+      },
+      "columns": {
+        "display": [
+          "Rank",
+          "Handle",
+          "Display Name",
+          "Followers",
+          "Entity Type",
+          "Hawaii-Based",
+          "Financial Capacity",
+          "Total Score",
+          "Outreach Type"
+        ],
+        "searchable": [
+          "Handle",
+          "Display Name",
+          "Bio",
+          "Entity Type"
+        ],
+        "sortable": [
+          "Rank",
+          "Total Score",
+          "Followers",
+          "Financial Capacity"
+        ]
+      }
+    }
+  ],
+  "features": {
+    "enableSearch": true,
+    "enableFilters": true,
+    "recordsPerPage": 25
+  }
+}
