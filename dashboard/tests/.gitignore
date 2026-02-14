@@ -1,0 +1,13 @@
+# Test artifacts
+reports/
+__pycache__/
+*.pyc
+.pytest_cache/
+test-results/
+playwright-report/
+.coverage
+htmlcov/
+
+# Playwright
+node_modules/
+playwright/.cache/
