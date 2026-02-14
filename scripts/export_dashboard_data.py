@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Export followers.db and output CSVs to dashboard/js/data.js for the static dashboard."""
+import csv
+import json
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DB_PATH = ROOT / "data" / "followers.db"
+FUNDRAISING_CSV = ROOT / "output" / "fundraising_outreach.csv"
+MARKETING_CSV = ROOT / "output" / "marketing_partners.csv"
+OUTPUT_JS = ROOT / "dashboard" / "js" / "data.js"
+
+TIER_BOUNDARIES = [(80, "Tier 1 - High Priority"), (60, "Tier 2 - Medium Priority"),
+                   (40, "Tier 3 - Low Priority"), (0, "Tier 4 - Skip")]
+
+FOLLOWER_RANGES = [
+    (50000, "50K+"), (10000, "10K-50K"), (5000, "5K-10K"),
+    (1000, "1K-5K"), (100, "100-1K"), (0, "<100"),
+]
+
+
+def get_tier(score):
+    for threshold, label in TIER_BOUNDARIES:
+        if score >= threshold:
+            return label
+    return "Tier 4 - Skip"
+
+
+def get_follower_range(count):
+    if count is None:
+        return "<100"
+    for threshold, label in FOLLOWER_RANGES:
+        if count >= threshold:
+            return label
+    return "<100"
+
+
+def read_all_followers():
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT * FROM followers ORDER BY priority_score DESC").fetchall()
+    conn.close()
+    followers = []
+    for row in rows:
+        d = dict(row)
+        for key in ("is_hawaii", "is_verified", "is_private", "is_business"):
+            d[key] = bool(d.get(key))
+        if d.get("priority_score") is None:
+            d["priority_score"] = 0
+        d["tier"] = get_tier(d["priority_score"])
+        followers.append(d)
+    return followers
+
+
+def read_csv_file(path):
+    rows = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            cleaned = {}
+            for key, val in row.items():
+                if key in ("Rank", "Followers", "Financial Capacity", "Donor Access",
+                           "Dinner Potential", "Hawaii Connection", "Total Score", "Score"):
+                    try:
+                        cleaned[key] = int(val) if val else None
+                    except ValueError:
+                        cleaned[key] = None
+                else:
+                    cleaned[key] = val if val else None
+            rows.append(cleaned)
+    return rows
+
+
+def compute_summary(followers, fundraising, marketing):
+    total = len(followers)
+    hawaii_count = sum(1 for f in followers if f.get("is_hawaii"))
+    non_hawaii_count = total - hawaii_count
+
+    category_counts = {}
+    tier_counts = {"Tier 1 - High Priority": 0, "Tier 2 - Medium Priority": 0,
+                   "Tier 3 - Low Priority": 0, "Tier 4 - Skip": 0}
+    range_counts = {"50K+": 0, "10K-50K": 0, "5K-10K": 0, "1K-5K": 0, "100-1K": 0, "<100": 0}
+    status_counts = {}
+
+    for f in followers:
+        cat = f.get("category") or "unknown"
+        category_counts[cat] = category_counts.get(cat, 0) + 1
+        tier_counts[f["tier"]] = tier_counts.get(f["tier"], 0) + 1
+        r = get_follower_range(f.get("follower_count"))
+        range_counts[r] = range_counts.get(r, 0) + 1
+        status = f.get("status") or "unknown"
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    outreach_counts = {}
+    for p in fundraising:
+        ot = p.get("Outreach Type") or "unknown"
+        outreach_counts[ot] = outreach_counts.get(ot, 0) + 1
+
+    return {
+        "totalFollowers": total,
+        "hawaiiCount": hawaii_count,
+        "nonHawaiiCount": non_hawaii_count,
+        "categoryBreakdown": dict(sorted(category_counts.items(), key=lambda x: -x[1])),
+        "tierBreakdown": tier_counts,
+        "followerRanges": range_counts,
+        "statusBreakdown": status_counts,
+        "outreachTypeBreakdown": outreach_counts,
+        "fundraisingCount": len(fundraising),
+        "marketingCount": len(marketing),
+        "exportedAt": datetime.now().isoformat(),
+    }
+
+
+def main():
+    OUTPUT_JS.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Reading database: {DB_PATH}")
+    followers = read_all_followers()
+    print(f"  -> {len(followers)} followers loaded")
+
+    print(f"Reading CSV: {FUNDRAISING_CSV}")
+    fundraising = read_csv_file(FUNDRAISING_CSV)
+    print(f"  -> {len(fundraising)} fundraising prospects loaded")
+
+    print(f"Reading CSV: {MARKETING_CSV}")
+    marketing = read_csv_file(MARKETING_CSV)
+    print(f"  -> {len(marketing)} marketing partners loaded")
+
+    summary = compute_summary(followers, fundraising, marketing)
+    print(f"Summary: {summary['totalFollowers']} total, "
+          f"{summary['hawaiiCount']} Hawaii, "
+          f"{summary['fundraisingCount']} prospects, "
+          f"{summary['marketingCount']} partners")
+
+    data = {
+        "summary": summary,
+        "fundraisingProspects": fundraising,
+        "marketingPartners": marketing,
+        "allFollowers": followers,
+    }
+
+    js_content = (
+        "// Auto-generated by scripts/export_dashboard_data.py — DO NOT EDIT\n"
+        f"// Generated: {summary['exportedAt']}\n"
+        "const DASHBOARD_DATA = " + json.dumps(data, indent=2, ensure_ascii=False) + ";\n"
+    )
+
+    OUTPUT_JS.write_text(js_content, encoding="utf-8")
+    print(f"Wrote {OUTPUT_JS} ({len(js_content):,} bytes)")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hawaii Fi-Do | Follower Intelligence Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>Hawaii Fi-Do</h1>
+      <p class="login-subtitle">Follower Intelligence Dashboard</p>
+      <p class="login-desc">Board members only. Sign in with your authorized Google account.</p>
+      <button id="login-btn" class="btn-primary">Sign in with Google</button>
+      <p id="login-error" class="login-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" hidden>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <h1 class="header-title">Hawaii Fi-Do</h1>
+        <span class="header-subtitle">Follower Intelligence Dashboard</span>
+      </div>
+      <div class="header-right">
+        <span id="user-email" class="user-email"></span>
+        <button id="logout-btn" class="btn-small">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="prospects">Top Prospects</button>
+      <button class="tab" data-tab="partners">Marketing Partners</button>
+      <button class="tab" data-tab="followers">All Followers</button>
+    </nav>
+
+    <!-- Tab Content -->
+    <main class="content">
+      <!-- Overview Tab -->
+      <section id="tab-overview" class="tab-content active">
+        <div class="stat-cards" id="stat-cards"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Category Distribution</h3>
+            <label class="chart-toggle">
+              <input type="checkbox" id="toggle-personal"> Include personal accounts
+            </label>
+            <div class="chart-container chart-container-bar">
+              <canvas id="chart-categories"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Hawaii Connection</h3>
+            <div class="chart-container chart-container-doughnut">
+              <canvas id="chart-hawaii"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Priority Tiers</h3>
+            <div class="chart-container chart-container-doughnut">
+              <canvas id="chart-tiers"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Follower Reach</h3>
+            <div class="chart-container chart-container-bar">
+              <canvas id="chart-reach"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Prospects Tab -->
+      <section id="tab-prospects" class="tab-content">
+        <div class="tab-header">
+          <h2>Top Fundraising Prospects</h2>
+          <p class="score-legend">
+            Score = <span class="legend-chip financial">Financial Capacity</span> /40
+            + <span class="legend-chip donor">Donor Access</span> /25
+            + <span class="legend-chip dinner">Dinner Potential</span> /20
+            + <span class="legend-chip hawaii-conn">Hawaii Connection</span> /15
+          </p>
+        </div>
+        <div class="chart-card prospects-chart-card">
+          <h3>Score Breakdown by Prospect</h3>
+          <div class="chart-container chart-container-stacked">
+            <canvas id="chart-prospects"></canvas>
+          </div>
+        </div>
+        <div id="prospects-table-container" class="table-container"></div>
+      </section>
+
+      <!-- Marketing Partners Tab -->
+      <section id="tab-partners" class="tab-content">
+        <div class="tab-header">
+          <h2>Marketing Partners</h2>
+          <p>Potential collaboration partners for shared marketing campaigns and audience reach.</p>
+        </div>
+        <div class="chart-card">
+          <h3>Partner Scores</h3>
+          <div class="chart-container chart-container-bar">
+            <canvas id="chart-partners"></canvas>
+          </div>
+        </div>
+        <div id="partners-table-container" class="table-container"></div>
+      </section>
+
+      <!-- All Followers Tab -->
+      <section id="tab-followers" class="tab-content">
+        <div class="filter-bar">
+          <input type="text" id="search-input" class="filter-input" placeholder="Search handle, name, or bio...">
+          <select id="filter-category" class="filter-select">
+            <option value="">All Categories</option>
+          </select>
+          <select id="filter-hawaii" class="filter-select">
+            <option value="">All Locations</option>
+            <option value="true">Hawaii Only</option>
+            <option value="false">Non-Hawaii</option>
+          </select>
+          <select id="filter-tier" class="filter-select">
+            <option value="">All Tiers</option>
+            <option value="Tier 1 - High Priority">Tier 1 - High</option>
+            <option value="Tier 2 - Medium Priority">Tier 2 - Medium</option>
+            <option value="Tier 3 - Low Priority">Tier 3 - Low</option>
+            <option value="Tier 4 - Skip">Tier 4 - Skip</option>
+          </select>
+          <select id="sort-by" class="filter-select">
+            <option value="priority_score-desc">Score (High to Low)</option>
+            <option value="priority_score-asc">Score (Low to High)</option>
+            <option value="follower_count-desc">Followers (High to Low)</option>
+            <option value="handle-asc">Handle (A-Z)</option>
+          </select>
+        </div>
+        <p id="results-count" class="results-count"></p>
+        <div id="followers-table-container" class="table-container"></div>
+        <div id="pagination" class="pagination"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Hawaii Fi-Do Follower Intelligence Dashboard <span id="export-date"></span></p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <!-- Firebase Auth (uncomment after Firebase project setup) -->
+  <!--
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  -->
+  <script src="js/data.js"></script>
+  <script src="js/tables.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
