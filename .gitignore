@@ -10,8 +10,12 @@ data/candidates_raw.json
 data/top_15_marketing_partners.json
 data/top_25_fundraising.json
 data/all_analyzed_profiles.json 
+website/firebase-deploy/node_modules/
+package-lock.json
 
-
+.firebase/
+.firebaserc
 .worktrees/
 .playwright-mcp/
 .playwright/
+node_modules/
