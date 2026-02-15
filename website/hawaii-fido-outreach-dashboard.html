@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hawaii FIDO — Instagram Outreach Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
+  :root {
+    --ocean: #0A2540;
+    --deep: #0F3460;
+    --teal: #16A085;
+    --teal-light: #1ABC9C;
+    --coral: #E8725A;
+    --coral-light: #FF8A6B;
+    --gold: #F2C94C;
+    --sand: #FBF7F0;
+    --white: #FFFFFF;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 4px 16px rgba(10,37,64,0.08);
+    --shadow-lg: 0 12px 40px rgba(10,37,64,0.12);
+    --radius: 12px;
+    --radius-lg: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--sand);
+    color: var(--gray-800);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: linear-gradient(135deg, var(--ocean) 0%, var(--deep) 40%, #1a4a7a 70%, var(--teal) 100%);
+    padding: 56px 40px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -5%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(22,160,133,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-inner { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .hero-badge .dot {
+    width: 8px; height: 8px;
+    background: var(--teal-light);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px; font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--gold), var(--coral-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p { font-size: 17px; color: rgba(255,255,255,0.65); max-width: 640px; font-weight: 300; line-height: 1.7; }
+
+  /* ─── STATS BAR ─── */
+  .stats-bar { max-width: 1280px; margin: -28px auto 0; padding: 0 40px; position: relative; z-index: 10; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 22px 24px; box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .stat-label { font-size: 12px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--ocean); letter-spacing: -1px; }
+  .stat-sub { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+  /* ─── MAIN ─── */
+  .main { max-width: 1280px; margin: 0 auto; padding: 40px 40px 80px; }
+
+  /* ─── TABS ─── */
+  .tabs-wrapper {
+    display: flex; align-items: center; gap: 4px;
+    margin-bottom: 28px; border-bottom: 2px solid var(--gray-200);
+  }
+  .tab-btn {
+    position: relative; padding: 14px 24px; font-size: 14px; font-weight: 600;
+    color: var(--gray-400); background: none; border: none; cursor: pointer;
+    transition: all 0.25s ease; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--gray-700); }
+  .tab-btn.active { color: var(--ocean); }
+  .tab-btn.active::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--teal-light));
+    border-radius: 3px 3px 0 0;
+  }
+  .tab-btn .tab-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; background: var(--gray-100);
+    border-radius: 100px; font-size: 11px; font-weight: 700;
+    color: var(--gray-500); margin-left: 8px; padding: 0 6px;
+    transition: all 0.25s ease;
+  }
+  .tab-btn.active .tab-count { background: var(--teal); color: var(--white); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ─── SECTION INTRO ─── */
+  .section-intro {
+    background: var(--white); border-radius: var(--radius-lg);
+    padding: 28px 32px; margin-bottom: 24px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+  }
+  .section-intro h2 { font-size: 20px; font-weight: 700; color: var(--ocean); margin-bottom: 6px; }
+  .section-intro p { font-size: 14px; color: var(--gray-500); line-height: 1.7; max-width: 800px; }
+
+  /* ─── TOOLBAR ─── */
+  .table-card {
+    background: var(--white); border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--gray-200);
+  }
+  .table-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--gray-100);
+  }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 8px 14px; width: 280px;
+    transition: all 0.2s ease;
+  }
+  .search-box:focus-within { border-color: var(--teal); background: var(--white); box-shadow: 0 0 0 3px rgba(22,160,133,0.1); }
+  .search-box svg { color: var(--gray-400); flex-shrink: 0; }
+  .search-box input { border: none; background: none; outline: none; font-size: 13px; color: var(--gray-700); width: 100%; font-family: inherit; }
+  .search-box input::placeholder { color: var(--gray-400); }
+  .filter-group { display: flex; gap: 8px; }
+  .filter-pill {
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    border-radius: 100px; border: 1px solid var(--gray-200);
+    background: var(--white); color: var(--gray-500); cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .filter-pill:hover, .filter-pill.active { background: var(--ocean); color: var(--white); border-color: var(--ocean); }
+
+  /* ─── PROSPECT CARDS ─── */
+  .prospect-list { padding: 0; }
+  .prospect-card {
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 0.15s ease;
+  }
+  .prospect-card:last-child { border-bottom: none; }
+  .prospect-card:hover { background: rgba(22,160,133,0.02); }
+
+  .prospect-header {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .prospect-rank {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    font-weight: 700; font-size: 13px;
+  }
+  .rank-1, .rank-2, .rank-3, .rank-default { background: var(--gray-50); color: var(--gray-500); }
+
+  .prospect-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .avatar-circle {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: var(--white); flex-shrink: 0;
+  }
+  .prospect-info { min-width: 0; }
+  .prospect-name {
+    font-weight: 700; font-size: 14px; color: var(--ocean);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .prospect-name a { color: inherit; text-decoration: none; }
+  .prospect-name a:hover { color: var(--teal); }
+  .prospect-subtitle {
+    font-size: 12px; color: var(--gray-400); margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 360px;
+  }
+  .prospect-blurb {
+    font-size: 11.5px; color: var(--gray-400); margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis;
+    max-width: 500px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+
+  .prospect-meta {
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .meta-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; min-width: 70px;
+  }
+  .meta-label { font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+  .meta-value { font-size: 13px; font-weight: 700; color: var(--ocean); font-variant-numeric: tabular-nums; }
+
+  .tag {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 100px; font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .tag-high { background: #D1FAE5; color: #065F46; }
+  .tag-med { background: #FEF3C7; color: #92400E; }
+  .tag-low { background: #FEE2E2; color: #991B1B; }
+  .tag-none { background: var(--gray-100); color: var(--gray-500); }
+  .tag-yes { background: #D1FAE5; color: #065F46; }
+  .tag-no { background: var(--gray-100); color: var(--gray-400); }
+  .tag-corporate { background: #DBEAFE; color: #1E40AF; }
+  .tag-individual { background: #EDE9FE; color: #5B21B6; }
+  .tag-business { background: #D1FAE5; color: #065F46; }
+  .tag-organization { background: #FEF3C7; color: #92400E; }
+  .tag-government { background: #FEE2E2; color: #991B1B; }
+  .tag-influencer { background: #FCE7F3; color: #9D174D; }
+  .tag-community { background: #CCFBF1; color: #115E59; }
+  .tag-media { background: #E0E7FF; color: #3730A3; }
+  .tag-pet { background: #FFEDD5; color: #9A3412; }
+  .tag-photographer { background: #F3E8FF; color: #6B21A8; }
+  .tag-nonprofit { background: #D1FAE5; color: #065F46; }
+  .tag-artist { background: #FDF2F8; color: #831843; }
+  .tag-door-opener { background: #E0E7FF; color: #3730A3; }
+
+  .expand-icon {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; background: var(--gray-50);
+    color: var(--gray-400); transition: all 0.2s ease;
+    font-size: 12px; flex-shrink: 0;
+  }
+  .prospect-card.open .expand-icon { background: var(--teal); color: var(--white); transform: rotate(180deg); }
+
+  /* ─── DETAIL PANEL ─── */
+  .prospect-detail {
+    display: none;
+    padding: 0 24px 24px 74px;
+    animation: fadeIn 0.25s ease;
+  }
+  .prospect-card.open .prospect-detail { display: block; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .detail-box {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .detail-box.full-width { grid-column: 1 / -1; }
+  .detail-box h4 {
+    font-size: 11px; font-weight: 700; color: var(--gray-400);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-box h4 .icon { font-size: 14px; }
+  .detail-box p {
+    font-size: 13px; color: var(--gray-600); line-height: 1.65;
+  }
+  .detail-box .ask-amount {
+    font-size: 22px; font-weight: 800;
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .score-item {
+    text-align: center;
+    padding: 10px 6px;
+    background: var(--white);
+    border-radius: 8px;
+    border: 1px solid var(--gray-100);
+  }
+  .score-item .val {
+    font-size: 18px; font-weight: 800; color: var(--ocean);
+    font-variant-numeric: tabular-nums;
+  }
+  .score-item .lbl {
+    font-size: 10px; color: var(--gray-400); font-weight: 600;
+    text-transform: uppercase; margin-top: 2px;
+  }
+  .total-score {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .total-score .big {
+    font-size: 36px; font-weight: 800; color: var(--ocean);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .total-score .of { font-size: 14px; color: var(--gray-400); font-weight: 600; }
+  .score-bar-outer {
+    flex: 1; height: 8px; background: var(--gray-100); border-radius: 8px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 8px;
+    transition: width 0.6s ease;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero { padding: 40px 24px; }
+    .stats-bar, .main { padding-left: 24px; padding-right: 24px; }
+    .hero h1 { font-size: 32px; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .score-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .tabs-wrapper { overflow-x: auto; }
+    .table-toolbar { flex-direction: column; gap: 12px; align-items: stretch; }
+    .search-box { width: 100%; }
+    .filter-group { flex-wrap: wrap; }
+    .hero h1 { font-size: 26px; }
+    .prospect-header { grid-template-columns: 34px 1fr auto; gap: 10px; padding: 12px 16px; }
+    .prospect-detail { padding-left: 16px; }
+    .prospect-meta { gap: 8px; }
+  }
+
+  .footer {
+    text-align: center; padding: 32px 24px 48px;
+    font-size: 12px; color: var(--gray-400);
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Board Review &mdash; Instagram Strategy</div>
+    <h1>Hawaii FIDO <span>Outreach Dashboard</span></h1>
+    <p>A consolidated view of our Instagram follower analysis &mdash; prospective donors, influencer partnerships, and dog businesses &mdash; for the board to review and prioritize next steps.</p>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Prospects</div>
+      <div class="stat-value">62</div>
+      <div class="stat-sub">Across all categories</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Combined Reach</div>
+      <div class="stat-value">590K+</div>
+      <div class="stat-sub">Instagram followers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Hawaii-Based</div>
+      <div class="stat-value">80%</div>
+      <div class="stat-sub">Local community roots</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Dollar Potential</div>
+      <div class="stat-value">$75K+</div>
+      <div class="stat-sub">Estimated fundraising reach</div>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+  <div class="tabs-wrapper">
+    <button class="tab-btn active" onclick="switchTab('donors', this)">
+      Donor Outreach <span class="tab-count">29</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('influencers', this)">
+      Influencers &amp; Partners <span class="tab-count">25</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('businesses', this)">
+      Dog Businesses <span class="tab-count">6</span>
+    </button>
+  </div>
+
+  <!-- ═══ TAB 1: DONORS ═══ -->
+  <div id="tab-donors" class="tab-panel active">
+    <div class="section-intro">
+      <h2>Donor &amp; Sponsorship Outreach</h2>
+      <p>Scored and ranked prospective donors including corporations, local businesses, wealthy individuals, member organizations, and government officials. Scored on Financial Capacity (40%), Donor Access (25%), Dinner Potential (20%), and Hawaii Connection (15%). Click any row to see the full analysis and outreach strategy.</p>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search donors..." oninput="filterCards('donors-list', this.value)">
+        </div>
+        <div class="filter-group">
+          <button class="filter-pill active" onclick="filterType(this,'donors-list','all')">All</button>
+          <button class="filter-pill" onclick="filterType(this,'donors-list','corporation')">Corporate</button>
+          <button class="filter-pill" onclick="filterType(this,'donors-list','established_business')">Business</button>
+          <button class="filter-pill" onclick="filterType(this,'donors-list','wealthy_individual')">Individual</button>
+          <button class="filter-pill" onclick="filterType(this,'donors-list','member_organization')">Organization</button>
+        </div>
+      </div>
+      <div id="donors-list" class="prospect-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: INFLUENCERS ═══ -->
+  <div id="tab-influencers" class="tab-panel">
+    <div class="section-intro">
+      <h2>Influencers &amp; Community Partners</h2>
+      <p>Instagram accounts with strong followings relevant to Hawaii FIDO's mission &mdash; spanning influencers, community organizations, media personalities, pet industry, photographers, and artists. Click any row to see why they matter and the recommended outreach strategy.</p>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search influencers..." oninput="filterCards('influencers-list', this.value)">
+        </div>
+        <div class="filter-group">
+          <button class="filter-pill active" onclick="filterType(this,'influencers-list','all')">All</button>
+          <button class="filter-pill" onclick="filterType(this,'influencers-list','influencer')">Influencer</button>
+          <button class="filter-pill" onclick="filterType(this,'influencers-list','local')">Local Biz</button>
+          <button class="filter-pill" onclick="filterType(this,'influencers-list','community')">Community</button>
+          <button class="filter-pill" onclick="filterType(this,'influencers-list','media')">Media</button>
+        </div>
+      </div>
+      <div id="influencers-list" class="prospect-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 3: BUSINESSES ═══ -->
+  <div id="tab-businesses" class="tab-panel">
+    <div class="section-intro">
+      <h2>Local Dog Businesses</h2>
+      <p>Six established Hawaii pet businesses with physical locations, clear revenue streams (>$30K/yr), and customer bases that align perfectly with Hawaii FIDO's mission. Ideal for in-store collection points, co-branded events, and ongoing community partnerships. Click any row for the full analysis.</p>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search businesses..." oninput="filterCards('businesses-list', this.value)">
+        </div>
+      </div>
+      <div id="businesses-list" class="prospect-list"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  Hawaii FIDO &mdash; Board Outreach Review &middot; Data sourced from Instagram follower analysis &middot; February 2026
+</footer>
+
+<script>
+// ─── TAB SWITCHING ───
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── TOGGLE CARD ───
+function toggleCard(el) {
+  el.closest('.prospect-card').classList.toggle('open');
+}
+
+// ─── SEARCH ───
+function filterCards(listId, query) {
+  const q = query.toLowerCase();
+  document.getElementById(listId).querySelectorAll('.prospect-card').forEach(card => {
+    card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ─── FILTER ───
+function filterType(btn, listId, type) {
+  btn.parentElement.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(listId).querySelectorAll('.prospect-card').forEach(card => {
+    if (type === 'all') { card.style.display = ''; return; }
+    const ct = card.getAttribute('data-type');
+    let match = ct === type;
+    if (type === 'corporation') match = ct === 'corporation' || ct === 'media_event_org';
+    if (type === 'wealthy_individual') match = ct === 'wealthy_individual' || ct === 'government_official';
+    if (type === 'local') match = ct === 'business_local' || ct === 'pet_industry';
+    if (type === 'community') match = ct === 'organization' || ct === 'community' || ct === 'nonprofit' || ct === 'artist';
+    if (type === 'media') match = ct === 'media' || ct === 'photographer';
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+// ─── HELPERS ───
+const typeLabels = {
+  corporation:['Corporate','tag-corporate'], established_business:['Business','tag-business'],
+  wealthy_individual:['Individual','tag-individual'], member_organization:['Organization','tag-organization'],
+  government_official:['Government','tag-government'], media_event_org:['Media/Event','tag-media'],
+  influencer:['Influencer','tag-influencer'], business_local:['Local Biz','tag-business'],
+  corporate:['Corporate','tag-corporate'], pet_industry:['Pet Industry','tag-pet'],
+  organization:['Organization','tag-organization'], community:['Community','tag-community'],
+  media:['Media','tag-media'], photographer:['Photographer','tag-photographer'],
+  nonprofit:['Nonprofit','tag-nonprofit'], artist:['Artist','tag-artist'],
+};
+function typeTag(t) { const [l,c] = typeLabels[t]||['Other','tag-none']; return `<span class="tag ${c}">${l}</span>`; }
+function rankClass(r) { return r<=3 ? `rank-${r}` : 'rank-default'; }
+function scoreColor(s) { return s>=70?'#10b981':s>=55?'#f59e0b':'#ef4444'; }
+
+const avatarColors = ['#2563EB','#D97706','#059669','#7C3AED','#DC2626','#0ea5e9','#8b5cf6','#10b981','#f59e0b','#ec4899','#E8725A','#06b6d4','#6366f1','#f97316','#14b8a6','#9333EA'];
+function getColor(i) { return avatarColors[i % avatarColors.length]; }
+function initials(name) { return name.replace(/[^a-zA-Z\s]/g,'').split(/\s+/).filter(w=>w.length>1).map(w=>w[0]).slice(0,2).join('').toUpperCase() || '??'; }
+
+// ═══════════════════════════════════════════
+// DONOR DATA (enriched from markdown)
+// ═══════════════════════════════════════════
+const donors = [
+  {r:1,h:"hawaiianelectric",n:"Hawaiian Electric",sub:"Multi-billion dollar utility serving 95% of Hawaii with robust CSR and community investment programs",t:"corporation",s:97,fi:40,da:22,dp:20,hc:15,ask:"$10,000\u2013$25,000",out:"CORPORATE SPONSORSHIP",
+   why:"Major Hawaii utility established 1891, serves 95% of Hawaii\u2019s population across five islands. Multi-billion dollar revenue base with robust CSR programs and community investment infrastructure. One CSR relationship here could anchor an entire fundraising season.",
+   fin:"TIER A \u2014 Multi-billion dollar revenue, serves Oahu, Maui, Molokai, Lanai, and Hawaii Island. Comprehensive CSR programs visible on website.",
+   access:"Large corporate employee base, vendor network, board connections to other major Hawaii businesses. Extensive community partnerships already in place.",
+   strat:"Contact CSR/Community Relations department. Propose event sponsorship with corporate branding at annual fundraising dinner\u2014Hawaiian Electric logo on materials, reserved corporate table, recognition in program. Emphasize alignment with their community empowerment mission and service to Hawaii residents with disabilities."},
+  {r:2,h:"rceasthonolulu",n:"Rotary Club of East Honolulu",sub:"Gold standard for donor access \u2014 one presentation reaches 30\u201350+ business owners and professionals",t:"member_organization",s:84,fi:28,da:24,dp:18,hc:14,ask:"$2,000\u2013$5,000",out:"MEMBER PRESENTATION",
+   why:"Gold standard for donor access. One presentation to Rotary = pitch to 30-50+ business owners/professionals simultaneously. Each member is a potential table buyer or major donor. Multiplier effect is enormous.",
+   fin:"TIER B \u2014 Members are typically affluent business owners/professionals. The club represents collective wealth of 30-50+ business owner members.",
+   access:"One presentation = access to 30-50+ business owners/professionals. Each member is a potential table buyer. Multiplier effect is enormous.",
+   strat:"Contact club president to request speaking slot at weekly meeting. Present Hawaii FIDO mission to full membership. After presentation, follow up with individual members for table purchases and individual donations. One presentation yields 20-40+ qualified prospects."},
+  {r:3,h:"teamjacohawaii",n:"Jaco Rehab",sub:"4-location medical practice with Best Workplace award; natural alignment serving disability patients",t:"established_business",s:77,fi:32,da:16,dp:15,hc:14,ask:"$2,000\u2013$3,500",out:"TABLE PURCHASE",
+   why:"Medical practice with 4 Hawaii locations (Honolulu, Waikele, Mililani, Kapolei) indicates substantial revenue. Best Workplace award suggests 20+ employees. Natural mission alignment\u2014physical therapists serve many disability-related patients.",
+   fin:"TIER B \u2014 Multi-location medical group typically has $3M+ annual revenue. Healthcare businesses have high billings.",
+   access:"Physical therapists work closely with doctors, orthopedic surgeons, and other healthcare providers. Patient base includes active community members.",
+   strat:"Contact practice owner/managing partner. Emphasize healthcare connection to service dog mission\u2014PT practice serves disability-related patients. Request table purchase for multi-location practice."},
+  {r:4,h:"sonyopenhawaii",n:"Sony Open in Hawaii",sub:"Major sporting event with corporate sponsor network (Sony, Lexus) and access to 350+ Hawaii nonprofits",t:"media_event_org",s:75,fi:28,da:25,dp:8,hc:14,ask:"N/A \u2014 Access value",out:"DOOR OPENER",
+   why:"Major sporting event with extensive corporate sponsor network (Sony, Lexus, luxury brands), wealthy golf community attendees, and connections to 350+ Hawaii nonprofits. One relationship = access to entire corporate sponsor base.",
+   fin:"TIER B \u2014 Run by Friends of Hawaii Charities (nonprofit). Financial capacity comes from access to corporate sponsors, not direct event funds.",
+   access:"Event has 26-year history with deep corporate and community connections. Corporate sponsors, wealthy golf community, 350+ Hawaii nonprofits.",
+   strat:"Contact Friends of Hawaii Charities leadership. Request introduction to corporate sponsors. Explore whether FIDO could be a beneficiary nonprofit. Access to sponsor network is the primary value, not direct donation."},
+  {r:5,h:"inform_hi",n:"InForm Design",sub:"Award-winning architecture firm with networks of developers, contractors, and corporate clients",t:"established_business",s:73,fi:30,da:15,dp:14,hc:14,ask:"$2,000\u2013$3,000",out:"TABLE PURCHASE",
+   why:"Award-winning Honolulu architecture and interior design firm. Architects have networks of developers, property owners, contractors, and corporate clients. Professional suite location indicates established success.",
+   fin:"TIER B \u2014 Architecture firms have high-income principals and significant project revenue. Commercial/hospitality projects indicate substantial billings.",
+   access:"Networks of developers, property owners, contractors, and corporate clients. Access to real estate and construction industry decision-makers.",
+   strat:"Contact principals/partners directly. Architecture firms frequently sponsor charity events for visibility with high-net-worth clients. Request table purchase for firm principals and staff."},
+  {r:6,h:"hondawindwardhi",n:"Honda Windward",sub:"Multi-million dollar auto dealership with strong community sponsorship track record on Windward Oahu",t:"established_business",s:69,fi:28,da:12,dp:16,hc:13,ask:"$2,500\u2013$5,000",out:"TABLE PURCHASE",
+   why:"Auto dealerships have substantial revenue streams and routinely participate in community sponsorships. Honda is a major brand with CSR expectations. High post count (2,232) shows long-term active business.",
+   fin:"TIER B \u2014 New car dealerships typically have annual revenues in millions. Dealerships routinely participate in community sponsorships.",
+   access:"Customer base in thousands, connections to Chamber of Commerce and local business associations.",
+   strat:"Contact general manager or owner. Propose table sponsorship with Honda Windward recognition in event materials, social media mentions. Frame as customer appreciation opportunity."},
+  {r:7,h:"iidahawaiipacific",n:"IIDA Hawaii Pacific Chapter",sub:"50+ commercial designers and architects \u2014 one presentation reaches entire high-income membership",t:"member_organization",s:69,fi:18,da:23,dp:14,hc:14,ask:"$1,000\u2013$3,000",out:"MEMBER PRESENTATION",
+   why:"Professional association with 50+ members who are commercial interior designers, architects, and design firm owners. One presentation = access to entire membership of professionals with business connections.",
+   fin:"TIER C \u2014 Association has limited budget, but members are commercial interior designers who run design firms with moderate to high income.",
+   access:"50+ members who are commercial interior designers, architects, and design firm owners. One presentation = access to entire membership.",
+   strat:"Request speaking opportunity at IIDA Hawaii Pacific Chapter meeting or event. Present Hawaii FIDO mission. Ask chapter to purchase table, then follow up with individual members for ticket purchases. High multiplier effect."},
+  {r:8,h:"cannie_chum_hawaiire",n:"Cannie Chum \u2014 Top 100 Realtor",sub:"Top 100 Hawaii Realtor with 30+ years experience and extensive high-net-worth client network",t:"wealthy_individual",s:67,fi:28,da:14,dp:12,hc:13,ask:"$1,000\u2013$2,000",out:"INDIVIDUAL DONOR",
+   why:"Top 100 Hawaii Realtor, Associate Partner at Locations LLC, multiple award winner. 30+ years in Hawaii (since 1990s). CRS and multiple certifications signal established success in luxury real estate.",
+   fin:"TIER B \u2014 Top 100 Hawaii Realtor with significant personal income from luxury real estate sales. Locations Foundation Advisory Board member.",
+   access:"Extensive network of wealthy homebuyers and sellers. Associate Partner role provides access to other high-net-worth individuals.",
+   strat:"Personal relationship approach leveraging her community involvement and award-winning status. Invite to dinner and request table sponsorship or multi-ticket purchase."},
+  {r:9,h:"hawaii.dt",n:"HDT, LLC",sub:"Telecom infrastructure company with recurring B2B revenue and significant capital investment",t:"established_business",s:67,fi:28,da:12,dp:14,hc:13,ask:"$2,000\u2013$4,000",out:"TABLE PURCHASE",
+   why:"Telecommunications infrastructure company requiring FCC licensing and significant capital investment. CLECs have recurring revenue from business/residential customers. Stable revenue model.",
+   fin:"TIER B \u2014 ISP + CLEC with significant capital investment. Infrastructure companies have recurring revenue. Stable model.",
+   access:"Business clients include other Hawaii companies. Telecommunications provider has B2B relationships.",
+   strat:"Corporate outreach to executive team. Pitch table purchase for business development and community visibility. ISPs often sponsor local causes for brand recognition."},
+  {r:10,h:"erein_trawick",n:"Erein Trawick",sub:"Mortgage industry manager with access to real estate agents and high-net-worth homebuyers",t:"wealthy_individual",s:66,fi:24,da:16,dp:13,hc:13,ask:"$1,000\u2013$3,000",out:"INDIVIDUAL DONOR",
+   why:"Division Manager/Loan Officer at Pineapple Mortgage (Hawaii-based). Management positions in mortgage industry typically earn $150K\u2013$300K+ annually. Network of real estate agents, wealthy homebuyers, and financial services professionals.",
+   fin:"TIER C \u2014 Division Manager/Loan Officer with multi-state licensing. High personal income capacity from mortgage industry.",
+   access:"Network of real estate agents, wealthy homebuyers, and financial services professionals. Access to high-net-worth individuals purchasing Hawaii properties.",
+   strat:"Direct personal outreach. Propose multi-ticket purchase or table sponsorship. Could introduce FIDO to real estate agent network and high-net-worth client base. Position dinner attendance as networking opportunity."},
+  {r:11,h:"halekuike",n:"Hale K\u016b\u02bbike",sub:"20-year memory care operator with 3 Oahu locations; natural mission alignment with therapeutic dogs",t:"established_business",s:66,fi:28,da:10,dp:14,hc:14,ask:"$1,000\u2013$3,000",out:"TABLE PURCHASE",
+   why:'Established memory care facility operating since 2005 with three Hawaii locations (Pali, Bayside, Nu\u2019uanu). Senior care facilities have significant revenue. Therapeutic value of dogs in dementia care creates natural mission alignment.',
+   fin:"TIER B \u2014 20+ years operating, three Hawaii locations. Senior care is expensive and profitable industry.",
+   access:"Healthcare business with connections to medical professionals and families of means.",
+   strat:"Contact ownership/management. Emphasize therapeutic value of dogs in dementia care\u2014natural mission alignment. Request table purchase or sponsorship."},
+  {r:12,h:"jchawaiirealty",n:"Jessica Chiu",sub:"Real estate brokerage owner with premium Ala Moana office and active investor network",t:"wealthy_individual",s:65,fi:27,da:13,dp:12,hc:13,ask:"$1,000\u2013$2,000",out:"INDIVIDUAL DONOR",
+   why:"Owns real estate brokerage corporation with broker license, CRB designation. Premium Ala Moana Blvd office indicates successful business with significant revenue. Specializes in residential sales and investing.",
+   fin:"TIER B \u2014 Corporate brokerage owner with office at premium Ala Moana location suggests significant revenue.",
+   access:"Network of wealthy clients, other realtors, lenders, and real estate investors.",
+   strat:"Personal outreach. Real estate professionals often support local charities for community visibility. Request individual donation and dinner tickets. Potential for annual recurring donor."},
+  {r:13,h:"pearlhotelwaikiki",n:"Pearl Hotel Waikiki",sub:"Established Waikiki hotel with multi-million dollar revenue and community goodwill priorities",t:"established_business",s:64,fi:28,da:10,dp:13,hc:13,ask:"$2,000\u2013$3,500",out:"TABLE PURCHASE",
+   why:"Established mid-tier hotel in Waikiki with significant capital investment. Likely $2M\u2013$5M annual revenue. Hotels need community goodwill and positive PR.",
+   fin:"TIER B \u2014 Hotel business with Waikiki location. Tourism-dependent but real business with financial capacity for sponsorship.",
+   access:"Hospitality industry connections, vendor and supplier network.",
+   strat:"Approach management/ownership with table purchase proposal. Hotels need community goodwill. Could offer recognition in FIDO materials and website. Alternative: hotel package donation for auction."},
+  {r:14,h:"rotaryeclubhi",n:"Rotary E-Club of Hawaii",sub:"30\u2013100+ business owners meeting via Zoom; one presentation reaches entire membership",t:"member_organization",s:63,fi:12,da:24,dp:14,hc:13,ask:"$0 (access value)",out:"MEMBER PRESENTATION",
+   why:"Rotary clubs consist of 30\u2013100+ business owners and professionals. One speaking slot = access to entire membership of potential donors. Highest multiplier value in fundraising. Meets 2nd Monday at noon via Zoom.",
+   fin:"TIER D \u2014 Club has limited financial capacity, but members individually have significant capacity.",
+   access:"30\u2013100+ business owners and professionals. Highest multiplier value in fundraising.",
+   strat:"Request speaking slot at Zoom meeting (2nd Monday at noon). Present Hawaii FIDO mission. Follow up individually for donations and table purchases. One presentation could yield 5\u201310 donors at $200\u2013$2,000 each."},
+  {r:15,h:"islandveterinarycare",n:"Island Veterinary Care",sub:"Advanced vet practice with CT imaging serving affluent pet owners; natural service dog alignment",t:"established_business",s:63,fi:26,da:11,dp:13,hc:13,ask:"$1,000\u2013$2,500",out:"TABLE PURCHASE",
+   why:"Established veterinary practice with advanced capabilities (CT imaging). Family-operated boutique clinic. Recent CT equipment investment shows financial strength. Natural mission alignment with service dog health.",
+   fin:"TIER B \u2014 Vet practice with advanced capabilities. Good revenue from medical services.",
+   access:"Client base of pet owners (many affluent), connections to pet businesses and medical professionals.",
+   strat:"Contact Dr. Lau (ownership). Pitch table purchase. Strong natural alignment\u2014veterinary practice supporting service dog organization. Potential referral relationship for service dog recipients needing vet care."},
+  {r:16,h:"gonorthshore",n:"North Shore Chamber of Commerce",sub:"Century-old Chamber with 100+ North Shore members; one presentation reaches entire business community",t:"member_organization",s:62,fi:10,da:25,dp:13,hc:14,ask:"$0 (access value)",out:"MEMBER PRESENTATION",
+   why:"Chamber of Commerce with 100+ business members. One presentation = access to entire North Shore business community. 100 years in operation. Members include restaurants, tour operators, retail, real estate.",
+   fin:"TIER D \u2014 Chamber has limited budget, but members collectively have significant capacity.",
+   access:"100+ business members. One presentation = access to entire North Shore business community. Maximum multiplier value.",
+   strat:"Request speaking slot at Chamber meeting or luncheon. Follow up with interested members for individual donations and dinner tickets. One presentation could yield 10\u201315 donors at $200\u2013$1,000 each."},
+  {r:17,h:"chrissiepinney",n:"Chrissie Pinney",sub:"Brewery co-founder with $500K+ capital investment; already follows FIDO \u2014 warm lead",t:"wealthy_individual",s:62,fi:26,da:12,dp:11,hc:13,ask:"$1,000\u2013$2,500",out:"INDIVIDUAL DONOR",
+   why:"Brewery co-founder with significant investment capital and business ownership. Craft breweries require substantial startup capital ($500K+). Already follows Hawaii Fi-Do\u2014warm lead.",
+   fin:"TIER B \u2014 Brewery co-founder with significant capital investment. Successful craft breweries generate strong revenue.",
+   access:"Knows other business owners, particularly in hospitality and retail.",
+   strat:"Approach as successful entrepreneur. Potential for brewery to sponsor table or provide beverage donation for event. Personal ask emphasizing Hawaii business supporting local service organization."},
+  {r:18,h:"hanakoabrewing",n:"Hana Koa Brewing Co.",sub:"Craft brewery with restaurant, event space, and co-founder who already follows FIDO",t:"established_business",s:62,fi:22,da:12,dp:14,hc:14,ask:"$1,000\u2013$3,000",out:"TABLE PURCHASE",
+   why:'Established craft brewery with restaurant operations, on-site brewing facility, and event space in Honolulu. "Hana Koa" means \u201cwork of the bay\u201d in Hawaiian. Co-founder @chrissiepinney already follows Hawaii Fi-Do. Dual approach opportunity.',
+   fin:"TIER C \u2014 Established craft brewery with restaurant, on-site brewing, and event space. Revenue diversity from events.",
+   access:"Business owner with hospitality industry connections and large customer base. Event space provides access to corporate clients.",
+   strat:"Contact ownership. Propose table purchase plus beverage sponsorship (donate beer for event). Could host pre-dinner fundraising event at their venue. Dual approach through brewery + personal ask through co-founder."},
+  {r:19,h:"fvchawaii",n:"Family Vision Care, Kapolei",sub:"Two-physician optometry practice with steady medical revenue serving West Oahu families",t:"established_business",s:62,fi:25,da:11,dp:13,hc:13,ask:"$2,000\u2013$3,000",out:"TABLE PURCHASE",
+   why:"Medical practice with two doctors serving West Oahu. Optometry practices generate substantial revenue from exams, contact lens fittings, and eyewear sales.",
+   fin:"TIER B \u2014 Two-physician practice with steady income. Medical professionals are high-income earners.",
+   access:"Patient base and local Kapolei business network.",
+   strat:"Contact both Dr. Kato and Dr. Kamibayashi. Pitch table purchase for community visibility and patient relationship building."},
+  {r:20,h:"augietulba.hnl",n:"Councilmember Augie Tulba",sub:"Elected official with access to city departments, business leaders, and government funding programs",t:"government_official",s:57,fi:15,da:20,dp:7,hc:15,ask:"$200\u2013$500",out:"DOOR OPENER",
+   why:"Elected Honolulu City Council member for District 9 (Ewa). Extensive network of business leaders, community organizations, and government officials. Can open doors to city contracts, grants, and introduce to business/philanthropic community.",
+   fin:"TIER D \u2014 Government official salary (~$70K). Limited personal wealth but controls access to city budget and government funding programs.",
+   access:"Extensive network of business leaders, community organizations, government officials. Can open doors to city contracts and grants.",
+   strat:"Request meeting. Seek public endorsement, introduction to city departments for potential service contracts, and connections to business community in District 9. Invite to attend dinner as honored guest. Value is in access, not personal donation."},
+  {r:21,h:"akamaienergy",n:"Akamai Energy",sub:"Professional solar company with Bishop St office handling $20K\u2013$100K commercial contracts",t:"established_business",s:61,fi:26,da:10,dp:12,hc:13,ask:"$2,000\u2013$3,000",out:"TABLE PURCHASE",
+   why:"Solar installation company with commercial/residential projects. Bishop Street office. Solar installation contracts are typically $20K\u2013$100K, indicating significant revenue.",
+   fin:"TIER B \u2014 Professional operation with Bishop Street office. Commercial solar projects indicate strong financial capacity.",
+   access:"Business owner with commercial client base. Knows other business owners through solar/energy industry.",
+   strat:"Business-to-business outreach. Pitch corporate sponsorship or table purchase. Akamai Energy gets brand visibility at dinner, shows community support. Target owner/principals directly."},
+  {r:22,h:"repbranco",n:"Rep. Patrick Pihana Branco",sub:"State representative with access to government officials, community leaders, and state funding",t:"government_official",s:49,fi:8,da:18,dp:8,hc:15,ask:"N/A (door-opener)",out:"DOOR OPENER",
+   why:"State House Representative with access to government officials, community leaders, and constituent network. Can open doors to state funding opportunities and government partnerships.",
+   fin:"TIER D \u2014 State representative salary (~$70K), not personal wealth indicator. Has access to government budgets and programs.",
+   access:"Access to government officials, community leaders, and constituent network. Can open doors to state funding and legislative support.",
+   strat:"Request meeting to present Hawaii FIDO\u2019s mission and economic impact. Ask for advocacy support, possible legislative support for service dog programs. Public endorsement adds credibility."},
+  {r:23,h:"mfastenau",n:"Mary Fastenau",sub:"Senior marketing exec with Chamber and Aloha United Way connections; therapy dog enthusiast",t:"wealthy_individual",s:55,fi:18,da:14,dp:10,hc:13,ask:"$500\u2013$1,000",out:"INDIVIDUAL DONOR",
+   why:"Retired marketing executive from established PR firm Anthology (Finn Partners). Senior marketing professionals retire with good savings. Worked with major Hawaii clients (HVBC, Chamber of Commerce, Aloha United Way). Therapy dog enthusiast.",
+   fin:"TIER C \u2014 Retired senior-level marketing professional from established firm.",
+   access:"Maintains professional network from marketing/PR career. Connections to Chamber of Commerce, nonprofits, business community.",
+   strat:"Personal outreach emphasizing therapy dog connection (mentioned in bio). Retired marketing professional could also provide volunteer marketing support. Leverage PR/Chamber network for introductions."},
+  {r:24,h:"curtw923",n:"Curt Williams",sub:"Major Hawaii radio personality reaching thousands daily; media and advertiser connections",t:"wealthy_individual",s:54,fi:14,da:16,dp:10,hc:14,ask:"$400\u2013$1,000",out:"DOOR OPENER",
+   why:"Major Hawaii radio personality. KSSK is a major Honolulu station. Afternoon drive host (2\u20137p) has high local visibility. Media coverage value far exceeds direct donation. Access to listeners, other media professionals, and station\u2019s advertising clients.",
+   fin:"TIER D \u2014 Radio host at major market station earns decent income ($60K\u2013$150K range).",
+   access:"Access to listeners, other media professionals, and station\u2019s advertising clients. Can promote causes on-air and connect to business community.",
+   strat:"Dual approach: (1) Request 2 dinner tickets as personal support, and (2) Ask for on-air promotion of Hawaii FIDO annual dinner to reach thousands of listeners. Could lead to interviews, PSAs, or event mentions. Door-opener to KSSK\u2019s advertising clients."},
+  {r:25,h:"fishcakehawaii",n:"fishcake",sub:"15.8K-follower creative hub with cafe, studio, and events attracting entrepreneurs and artists",t:"member_organization",s:72,fi:22,da:20,dp:16,hc:14,ask:"$0 (access value)",out:"MEMBER PRESENTATION",
+   why:"Honolulu\u2019s creative and small-business community hub in Kaka\u02bbako. Hosts events, vendor markets, and workshops that attract entrepreneurs, artists, and community-minded professionals. 15.8K followers. One event at fishcake reaches their entire creative/entrepreneurial network.",
+   fin:"TIER C \u2014 Community creative space with retail, cafe, clay studio, and event hosting. Multiple revenue streams.",
+   access:"Gathering place for Honolulu\u2019s creative and small-business community. One presentation or event partnership = access to dozens of local business owners.",
+   strat:"Partner with fishcake to host a Hawaii FIDO awareness event or fundraiser at their space. Request inclusion in their events calendar and vendor network communications. Value is as community connector and event venue."},
+  {r:26,h:"hawaiidoggiebakery",n:"Hawaii Doggie Bakery",sub:"27-year dog bakery pioneer with 10K devoted followers and deep pet community relationships",t:"established_business",s:71,fi:24,da:18,dp:15,hc:14,ask:"$2,500\u2013$5,000",out:"TABLE PURCHASE",
+   why:"Hawaii\u2019s first dog bakery, 27+ years serving the pet community. Nearly 10K followers with a dedicated, spending-oriented customer base. Pioneer status makes them a respected voice in Hawaii\u2019s pet industry. Online shop plus physical retail location in Manoa.",
+   fin:"TIER B \u2014 25+ year established pet business with dedicated retail location, online shop, and nearly 10K followers. Longevity indicates sustained profitability.",
+   access:"Customer base of dedicated pet owners, 25 years of deep relationships with vets, groomers, and pet event organizers. Natural mission alignment.",
+   strat:"Direct outreach emphasizing natural mission alignment\u2014Hawaii\u2019s oldest dog bakery supporting Hawaii\u2019s service dog nonprofit. Request table purchase and auction item donation. Propose co-branded fundraising product (limited-edition FIDO treats). Their 10K-follower Instagram could amplify dinner promotion."},
+  {r:27,h:"thepublicpet",n:"The Public Pet",sub:"Premier pet retailer with 15.5K followers and event-driven brand perfectly aligned with FIDO",t:"established_business",s:69,fi:24,da:16,dp:15,hc:14,ask:"$2,500\u2013$5,000",out:"TABLE PURCHASE",
+   why:"Premier urban pet supply store in Kaimuk\u012b with 15.5K followers\u2014largest pet industry following in the database. Active community engagement through events like \u201cPaw Hana\u201d and \u201cSURFUR.\u201d Event-driven brand identity aligns perfectly with Fi-Do\u2019s mission.",
+   fin:"TIER B \u2014 Pet supply store in desirable Kaimuk\u012b location. 15.5K followers and 4,500+ posts indicate thriving, engaged business with strong premium product margins.",
+   access:"Pet store customers are dedicated pet owners. Community gathering point with events. Access to pet-owning demographic naturally aligned with service dog mission.",
+   strat:"Visit store in person. Propose table purchase with recognition as pet industry sponsor. Request in-store promotion (flyers, counter display). Could host in-store adoption or awareness event. Natural co-marketing partner for any pet-related FIDO campaign."},
+  {r:28,h:"heartofkailua",n:"Julianne King",sub:"Disability advocacy leader with direct FIDO mission overlap and government services network access",t:"member_organization",s:68,fi:18,da:22,dp:14,hc:14,ask:"$0 (access value)",out:"MEMBER PRESENTATION",
+   why:"Kailua community leader and Hawaii Autism Foundation\u2014direct mission overlap with FIDO (service dogs for people with disabilities). Access to disability advocacy network, donors, and government disability services contacts. One relationship opens doors to an entire parallel nonprofit ecosystem.",
+   fin:"TIER C \u2014 Nonprofit leader. Moderate personal capacity but enormous network value.",
+   access:"Disability advocacy network, Hawaii Autism Foundation donors, government disability services contacts. Direct mission overlap.",
+   strat:"Peer-to-peer nonprofit outreach. Propose cross-promotion, shared events, or joint grant applications. Request introduction to Foundation donors and board members. The disability advocacy overlap makes this a high-value strategic relationship."},
+  {r:29,h:"haikuvet",n:"Haiku Veterinary Clinic",sub:"Established vet serving affluent Windward Oahu pet owners with strong community ties",t:"established_business",s:68,fi:24,da:16,dp:14,hc:14,ask:"$2,000\u2013$3,500",out:"TABLE PURCHASE",
+   why:"Established veterinary clinic on Windward Oahu serving affluent Kailua/Kaneohe pet owners. Active social media and professional operation. Direct mission alignment: vet clinic supporting service dog nonprofit is a natural fit.",
+   fin:"TIER B \u2014 Established vet practice with strong revenue from medical services, surgeries, preventive care. Windward Oahu serves affluent pet owners.",
+   access:"Client base of committed pet owners, connections to pet industry and medical community. Tight-knit Windward pet owner community.",
+   strat:"Contact clinic owner/lead veterinarian. Pitch table purchase emphasizing natural alignment. Propose veterinary partnership (discounted care for FIDO service dogs in training). Request waiting room promotional materials. Vet recommendation carries enormous weight with pet-owning donors."},
+];
+
+// ═══════════════════════════════════════════
+// INFLUENCER DATA (enriched from markdown)
+// ═══════════════════════════════════════════
+const influencers = [
+  {r:1,h:"leilahurst",n:"Leila Byram",sub:"Largest individual following in database; a single post generates enormous awareness potential",cat:"influencer",f:69900,hi:false,net:"Med",dol:"None",
+   why:"Largest individual following in the entire follower base. Athlete with massive reach. No evident Hawaii/service dog/nonprofit connection, but a single post or story mention would generate enormous awareness. Pure amplification play.",
+   strat:"DM requesting a one-time collab post or story share about Hawaii Fi-Do\u2019s mission. Frame as a feel-good cause that resonates with her audience. No financial ask\u2014the visibility is the value."},
+  {r:2,h:"humphreysaccaro",n:"HUMPHREY",sub:"Honolulu celebrity dog with 64K followers and brand partnerships; one post reaches massive pet-lover audience",cat:"business_local",f:64300,hi:true,net:"\u2014",dol:"\u2014",
+   why:"Honolulu celebrity dog with 64K+ followers. Owner @sammmysaccaro has brand partnerships (Dr. Harvey\u2019s) and could promote Hawaii Fi-Do to an enormous, engaged pet-lover audience. Promotional value far exceeds any direct donation ask.",
+   strat:"Approach owner for promotional partnership. One Humphrey post = 64K impressions to a pet-loving audience. Could attend events as \u201ccelebrity guest\u201d for photo ops and engagement."},
+  {r:3,h:"emerson_and_co",n:"Emerson Retrievers",sub:"Large dog account with merchandise line; mainland location limits Hawaii fundraising value",cat:"influencer",f:58400,hi:false,net:"\u2014",dol:"\u2014",
+   why:"Large dog account but mainland-based. Golden retriever family with merchandise line. No Hawaii connection. Promotional collab is theoretically possible but geographic disconnect limits fundraising value.",
+   strat:"Low priority despite high follower count. Could explore a one-time awareness post if they\u2019re receptive, but limited ROI for Hawaii-focused nonprofit."},
+  {r:4,h:"psychological_vigilante",n:"Jen_Nay",sub:"Large following but no evident mission alignment; monitor for natural connection points",cat:"influencer",f:48400,hi:false,net:"\u2014",dol:"\u2014",
+   why:"Large following but no evident Hawaii/service dog/nonprofit connection. No bio information available. Difficult to assess alignment. Low priority despite high follower count.",
+   strat:"Monitor only. Engage if a natural connection point emerges."},
+  {r:5,h:"yafavoritelatinaa",n:"Asianna Saragosa-Llarinas",sub:"Hawaii media connections across KHON2, HI NOW, HNN; one TV segment reaches hundreds of thousands",cat:"influencer",f:43800,hi:false,net:"High",dol:"None",
+   why:"Has appeared on multiple Hawaii media outlets (KHON2, HI NOW, HNN). Strong local media connections. Her media relationships make her a gateway to broadcast coverage. One TV segment reaches hundreds of thousands of Hawaii households\u2014far more impactful than any Instagram post.",
+   strat:"Pitch a service dog human-interest story through her media connections. One TV segment on KHON2 or HI NOW reaches hundreds of thousands of Hawaii households."},
+  {r:6,h:"hawaiianelectric",n:"Hawaiian Electric",sub:"Top fundraising prospect with 130+ year history and CSR programs; see Donor tab for full strategy",cat:"corporate",f:33400,hi:true,net:"\u2014",dol:"\u2014",
+   why:"Top fundraising prospect. Major Hawaii utility with 130+ year history, CSR programs, and community investment infrastructure. Highest-ROI corporate sponsorship target across all tiers. One CSR relationship here could anchor an entire fundraising season.",
+   strat:"See Donor Outreach tab for full corporate sponsorship strategy."},
+  {r:7,h:"imjakeacedo",n:"Jake Acedo",sub:"22K engaged followers with email in bio; accessible for awareness post about FIDO\u2019s mission",cat:"influencer",f:22800,hi:false,net:"Med",dol:"None",
+   why:"Public figure with 22K+ engaged following. Accessible via email in bio. One awareness post reaches a large audience segment that likely overlaps with Hawaii community.",
+   strat:"Direct email outreach with a concise pitch. Request a single Instagram post or story featuring Hawaii Fi-Do. Offer event invite or photo opportunity with service dogs as content hook."},
+  {r:8,h:"long_live_our_animals",n:"Animal Wellness Advocate",sub:"Animal wellness advocate with affiliate marketing focus; high followers but limited partnership path",cat:"pet_industry",f:22600,hi:false,net:"\u2014",dol:"\u2014",
+   why:"Individual animal wellness advocate with affiliate marketing focus, not an established business. High follower count but limited fundraising or partnership path for a Hawaii-based nonprofit.",
+   strat:"Low priority. Monitor for potential content crossover opportunities."},
+  {r:9,h:"michaelsunlee",n:"Michael Sun Lee",sub:"Artist and entertainer with established media presence; could bring creative energy to events",cat:"influencer",f:17600,hi:false,net:"Med",dol:"None",
+   why:"Artist and entertainer with significant following. VoyageLA interview indicates established media presence. Could bring creative energy and celebrity draw to fundraising events.",
+   strat:"Invite as featured guest or performer at a fundraiser event. His attendance draws his audience\u2019s attention and creates shareable content."},
+  {r:10,h:"fishcakehawaii",n:"fishcake",sub:"Top venue partner with embedded entrepreneur and artist networks; see Donor tab",cat:"organization",f:15800,hi:true,net:"\u2014",dol:"\u2014",
+   why:"Top venue partner with donor-class member network. Creative co-working hub in Kaka\u02bbako with retail, cafe, clay studio, and event space. Their vendor and workshop networks include local business owners, artists, and entrepreneurs.",
+   strat:"See Donor Outreach tab for full partnership strategy. High-value prospect for event hosting and network access."},
+  {r:11,h:"thepublicpet",n:"The Public Pet",sub:"Premier Hawaii pet retailer with largest pet industry following; see Dog Businesses tab",cat:"pet_industry",f:15500,hi:true,net:"\u2014",dol:"\u2014",
+   why:"Premier Hawaii pet retailer with largest pet industry following in the database. Active community engagement through events like \u201cPaw Hana\u201d and \u201cSURFUR.\u201d Natural anchor partner for in-store collection points and co-hosted awareness events.",
+   strat:"See Dog Businesses tab for full in-store partnership strategy."},
+  {r:12,h:"hanakoabrewing",n:"Hana Koa Brewing Co.",sub:"Dual approach: corporate sponsorship from brewery + personal ask through co-founder; see Donor tab",cat:"business_local",f:15300,hi:true,net:"\u2014",dol:"\u2014",
+   why:"Top fundraising prospect with venue and sponsorship potential. Co-founder @chrissiepinney already follows Hawaii Fi-Do\u2014warm lead. Dual approach: corporate sponsorship from the brewery + personal ask through the co-founder.",
+   strat:"See Donor Outreach tab for full corporate + personal sponsorship strategy."},
+  {r:13,h:"im.alexis.renae",n:"Alexis Renae",sub:"Model and youth empowerment CEO with fashion connections and legitimate media reach",cat:"influencer",f:10300,hi:true,net:"High",dol:"Low",
+   why:"Hawaii-based model and CEO of Role Models 808 (youth empowerment). Natural mission alignment with service dogs and empowerment. Harper\u2019s Bazaar published means legitimate media connections. Her platform reaches young people and their families.",
+   strat:"Propose a joint youth empowerment + service dog awareness event through Role Models 808. Her fashion industry connections could attract sponsors."},
+  {r:14,h:"thecoconutpages",n:"The Coconut Pages",sub:"Hawaii\u2019s dedicated community network built to amplify local organizations \u2014 perfect fit for FIDO",cat:"community",f:8697,hi:true,net:"High",dol:"None",
+   why:"Hawaii\u2019s dedicated food, health, and community network. Explicitly exists to amplify local brands and businesses. Their entire model is connecting and promoting Hawaii organizations\u2014Hawaii Fi-Do fits perfectly.",
+   strat:"Request a feature collab as a Hawaii community organization. Propose a service dog awareness post or story series. Their network reaches Hawaii businesses and health-conscious community members."},
+  {r:15,h:"mrjasontom",n:"Jason Tom",sub:"TEDx Honolulu speaker connected to education and tech communities; opens new donor segments",cat:"influencer",f:7894,hi:true,net:"High",dol:"None",
+   why:"TEDx Honolulu speaker, educator, and prolific blogger. Connected to Hawaii\u2019s education and tech communities. His TEDx credential adds legitimacy to any event he promotes. Active at community events (Kalihi, Kroc Center, First Friday).",
+   strat:"Invite to speak at or emcee a fundraiser event. His education/tech network opens a new donor segment not typically reached by pet/dog audiences."},
+  {r:16,h:"adriennearieff",n:"Adrienne Arieff",sub:"Nonprofit branding expert whose network includes corporate leaders who fund community causes",cat:"influencer",f:5851,hi:false,net:"High",dol:"Low",
+   why:"Founder of Link Creative (brand strategy), creator of Next Chapter Collective, published author. Deep expertise in branding for nonprofits and values-driven organizations. Her professional network includes corporate leaders who fund causes.",
+   strat:"Approach as a branding/strategy consultant who could advise on Fi-Do\u2019s positioning. Her Link Creative network could introduce Hawaii Fi-Do to corporate donors and foundations. Ask for introductions, not money."},
+  {r:17,h:"greataloharun",n:"Great Aloha Run",sub:"Retiring event with decades of sponsor relationships and thousands of community connections",cat:"organization",f:5689,hi:true,net:"High",dol:"Low",
+   why:"Major Hawaii running event with deep community ties. Although retiring, the organization\u2019s network of sponsors, volunteers, and participants represents thousands of community-minded Hawaii residents. Their event infrastructure knowledge is valuable.",
+   strat:"Connect with event leadership. Their sponsor relationships (built over decades) could be transferred. Even a retired event org maintains powerful community connections."},
+  {r:18,h:"kanter",n:"Beth Kanter",sub:"National nonprofit expert whose network includes funders of disability and therapy programs",cat:"influencer",f:5387,hi:false,net:"High",dol:"Low",
+   why:"Nationally recognized nonprofit technology expert, author, and trainer. Works directly with nonprofits on fundraising, technology, and capacity building. Her network is literally the people who fund and run nonprofits across the country.",
+   strat:"Approach as a nonprofit peer. Request introduction to foundations and donors who fund disability and animal-assisted therapy programs. Her endorsement carries weight in nonprofit funding circles. Could also advise on Fi-Do\u2019s digital fundraising strategy."},
+  {r:19,h:"sunny_aloha_in_paradise",n:"Sunny Aloha",sub:"Radio host and PR pro with broadcast experience; radio reaches demographics social media doesn\u2019t",cat:"media",f:3905,hi:true,net:"High",dol:"Low",
+   why:'Hawaii radio host and PR professional with years of broadcast experience across multiple stations. Direct access to Hawaii radio audiences. PR expertise means she knows how to craft and place stories. Called "Aloha Oprah."',
+   strat:"Pitch a radio segment or interview about service dogs in Hawaii. Radio reaches demographics that social media doesn\u2019t. Her PR background means she can help craft the story angle. Could become an ongoing media advocate."},
+  {r:20,h:"finnowitz",n:"Amanda Finn",sub:"Casting professional connected to producers and production companies; opens documentary potential",cat:"media",f:3481,hi:true,net:"Med",dol:"Low",
+   why:"Hawaii-based casting professional with connections to the film and television industry. Hawaii\u2019s film industry brings mainland production companies and their budgets to the islands. A service dog documentary short could generate national attention.",
+   strat:"Propose a short documentary or film segment about Hawaii Fi-Do\u2019s work. Casting professionals know producers, directors, and production companies."},
+  {r:21,h:"shotsbyremy",n:"Candid Moments Photography",sub:"Event photographer providing essential fundraiser documentation and marketing materials",cat:"photographer",f:1535,hi:true,net:"Med",dol:"None",
+   why:"Hawaii event and sports photographer. Professional event documentation is essential for fundraiser marketing materials, social media content, and sponsor reports.",
+   strat:"Propose a trade arrangement\u2014professional event photography in exchange for social media exposure, website credit, and networking at the event. Quality event photos are critical for future fundraising."},
+  {r:22,h:"alohasunshinephotography",n:"Aloha Sunshine Photography",sub:"Family-focused Hawaii photographer with deep community ties; ideal for service dog awareness content",cat:"photographer",f:1355,hi:true,net:"Low",dol:"None",
+   why:"Hawaii photographer with strong community ties (swim team coach, large family). Her audience is Hawaii families\u2014a key demographic for service dog awareness and fundraising events.",
+   strat:"Offer event photography trade for social media promotion. Her family-focused audience is ideal for service dog awareness messaging. Could photograph service dogs in training for ongoing content."},
+  {r:23,h:"pono_shell_creations",n:"Pono Shell Creations",sub:"Active Hawaii craft vendor with regular event schedule and retail partnerships for co-vending",cat:"business_local",f:1048,hi:true,net:"Med",dol:"Low",
+   why:"Active Hawaii craft vendor with regular event schedule and retail partnerships (Noeau Designers, Sugarcane Hawaii). Connected to Hawaii\u2019s maker and craft fair circuit. Co-vending at events puts Hawaii Fi-Do in front of community shoppers.",
+   strat:"Propose co-vendor arrangement at upcoming craft events. Hawaii Fi-Do could set up an adjacent awareness/donation booth. Cross-promote on social media. Low cost, high community visibility."},
+  {r:24,h:"artbridgeevents",n:"Chanel Tanaka",sub:"Waikiki artist hosting creative workshops that attract a different demographic than traditional events",cat:"artist",f:505,hi:true,net:"Low",dol:"None",
+   why:"Waikiki-based artist who hosts events including terrariums, succulents, and creative workshops. Art-based fundraisers attract a different demographic\u2014creative professionals and tourists in Waikiki.",
+   strat:"Propose an art-based fundraiser collaboration\u2014paint night, terrarium workshop, or art auction with proceeds benefiting Hawaii Fi-Do. Creative events attract audiences who wouldn\u2019t attend a traditional charity dinner."},
+  {r:25,h:"relei808",n:"RE-LEI",sub:"Nonprofit with natural mission alignment; co-hosting doubles reach and attracts foundations",cat:"nonprofit",f:291,hi:true,net:"Med",dol:"None",
+   why:"Nonprofit creative reuse design competition with natural mission alignment. Both organizations serve Hawaii\u2019s community through distinct but complementary missions. Their sustainability focus attracts environmentally conscious donors and volunteers.",
+   strat:"Propose a co-hosted event combining creative reuse and service dog awareness. Two Hawaii nonprofits partnering doubles audience reach and demonstrates community collaboration. Joint events are attractive to foundations that fund community partnerships."},
+];
+
+// ═══════════════════════════════════════════
+// DOG BUSINESS DATA (enriched from markdown)
+// ═══════════════════════════════════════════
+const businesses = [
+  {r:1,h:"thepublicpet",n:"The Public Pet",sub:"Largest pet business social media presence in Hawaii with 15.5K followers; ideal anchor partner",f:15500,dol:"Med",net:"High",
+   why:"Premier urban pet supply store in Kaimuk\u012b with 15.5K followers\u2014the largest social media presence of any pet business in Hawaii Fi-Do\u2019s follower base. Active community engagement through events like \u201cPaw Hana\u201d and \u201cSURFUR.\u201d Physical retail location with high foot traffic from dedicated pet owners. Their brand identity (progressive, community-oriented, event-driven) aligns perfectly with Fi-Do\u2019s mission.",
+   strat:"Visit store in person. Propose three-tier partnership: (1) permanent in-store donation jar and flyer display, (2) co-hosted monthly awareness event like \u201cService Dog Saturday,\u201d (3) social media cross-promotion to their 15.5K followers. Their event-driven culture makes them the ideal anchor partner for ongoing Hawaii Fi-Do visibility in Honolulu\u2019s pet community.",
+   loc:"3422 Waialae Ave, Honolulu, HI 96816",color:"#0ea5e9"},
+  {r:2,h:"hawaiidoggiebakery",n:"Hawaii Doggie Bakery",sub:"Hawaii\u2019s first dog bakery, 27+ years in Manoa with 10K devoted followers and pioneer status",f:9755,dol:"Med",net:"Med",
+   why:"Hawaii\u2019s first dog bakery, operating since 1998\u201427+ years of serving Hawaii\u2019s pet community. Nearly 10K followers with a dedicated, spending-oriented customer base. Physical retail location in Manoa plus online shop. Their longevity and pioneer status make them a respected voice in Hawaii\u2019s pet industry.",
+   strat:"Propose a co-branded fundraising product\u2014limited-edition \u201cFi-Do Treats\u201d with a portion of proceeds going to Hawaii Fi-Do. In-store donation jar and flyer display. Their 27-year customer relationships represent decades of trust with Hawaii pet owners who spend on their dogs.",
+   loc:"2961C East Manoa Rd, Honolulu, HI 96822",color:"#f59e0b"},
+  {r:3,h:"fureverfriendshi",n:"Furever Friends Play & Stay",sub:"Full-service pet facility with captive audience of owners who spend on premium animal care",f:4633,dol:"Med",net:"Med",
+   why:"Full-service pet boarding and daycare facility in Honolulu with diverse animal focus (dogs, cats, rabbits, birds). Their client base includes pet owners who are willing to spend on premium care\u2014exactly the demographic that supports animal-related nonprofits.",
+   strat:"Propose a co-hosted service dog awareness day at their facility. Boarding clients are a captive audience\u2014parents dropping off or picking up dogs encounter Hawaii Fi-Do messaging. In-facility flyers, lobby donation jar, and quarterly awareness events create ongoing visibility.",
+   loc:"686 Ahua Street, Honolulu, HI 96819",color:"#8b5cf6"},
+  {r:4,h:"kamaainak9",n:"Kama\u2019aina K9 Adventures",sub:"Central Oahu facility near military bases; opens new geographic territory and military family market",f:3849,dol:"Med",net:"Med",
+   why:"Dog daycare and boarding facility in Waipahu serving Central/West Oahu\u2014a geographic market not covered by the Honolulu-based pet businesses. Their location near military installations (Schofield, Wheeler) means access to military families who often rely on service dogs.",
+   strat:"Propose in-facility partnership: lobby flyers, donation jar, and inclusion in their client email communications. Their Waipahu location opens a new geographic territory for Hawaii Fi-Do awareness. Military family connection is particularly valuable for service dog messaging.",
+   loc:"94-1100 Kunia Rd, Waipahu, HI 96797",color:"#10b981"},
+  {r:5,h:"tailshawaii",n:"Tails of Hawaii",sub:"Unique pet facility with on-site Sit & Sip Cafe \u2014 natural venue for community events and meetups",f:2466,dol:"Med",net:"Med",
+   why:"Full-service pet facility in Pearl City with a unique advantage: the Sit & Sip Cafe. A cafe within a pet business creates a natural event venue for community gatherings, fundraiser meetups, and awareness sessions. Also operates pet transport (@tailmovershawaii), expanding customer touchpoints.",
+   strat:'Propose a monthly \u201cFi-Do Friday\u201d at the Sit & Sip Cafe\u2014service dog awareness session over coffee for boarding/daycare clients. Permanent donation display in the cafe. Their pet transport service could also be a referral partner for service dog recipients needing pet transport.',
+   loc:"98-751 Kuahao Pl, Ste 102, Pearl City, HI 96782",color:"#f472b6"},
+  {r:6,h:"808bowwow",n:"808 Bow Wow",sub:"Artisan health-focused bakery attracting premium-spending pet owners aligned with community causes",f:1333,dol:"Low",net:"Low",
+   why:"Honolulu-based all-natural dog treat bakery with a physical retail location on Young Street. Artisan, health-focused product line appeals to health-conscious pet owners who spend premium on their dogs. Smaller operation but deeply embedded in the local dog treat community.",
+   strat:"Propose a co-branded fundraiser treat with Hawaii Fi-Do branding\u2014a limited-run product with proceeds supporting the organization. In-store flyer display and donation jar. Their health-conscious customer base values community causes and is willing to pay premium for meaningful products.",
+   loc:"1334 Young St #107, Honolulu, HI 96814",color:"#f97316"},
+];
+
+// ═══════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════
+
+function renderDonors() {
+  const list = document.getElementById('donors-list');
+  list.innerHTML = donors.map((d, i) => {
+    const rc = rankClass(d.r);
+    const sc = scoreColor(d.s);
+    const ini = initials(d.n);
+    const col = getColor(i);
+    return `<div class="prospect-card" data-type="${d.t}">
+      <div class="prospect-header" onclick="toggleCard(this)">
+        <div class="prospect-rank ${rc}">${d.r}</div>
+        <div class="prospect-summary">
+          <div class="avatar-circle" style="background:${col}">${ini}</div>
+          <div class="prospect-info">
+            <div class="prospect-name"><a href="https://www.instagram.com/${d.h}/" target="_blank" onclick="event.stopPropagation()">${d.n}</a></div>
+            <div class="prospect-subtitle" style="color:var(--teal);font-weight:500">@${d.h}</div>
+            <div class="prospect-blurb">${d.sub}</div>
+          </div>
+        </div>
+        <div class="prospect-meta">
+          <div class="meta-item"><div class="meta-label">Score</div><div class="meta-value">${d.s}<span style="color:var(--gray-400);font-weight:400">/100</span></div></div>
+          <div class="meta-item"><div class="meta-label">Ask</div><div class="meta-value" style="font-size:12px;color:var(--teal)">${d.ask}</div></div>
+          <div class="expand-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="prospect-detail">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--gray-400)">${d.sub}</div>
+        <div class="total-score">
+          <div class="big">${d.s}</div><div class="of">/100</div>
+          <div class="score-bar-outer"><div class="score-bar-fill" style="width:${d.s}%;background:${sc}"></div></div>
+        </div>
+        <div class="score-grid" style="margin-bottom:16px">
+          <div class="score-item"><div class="val">${d.fi}<span style="font-size:11px;color:var(--gray-400)">/40</span></div><div class="lbl">Financial</div></div>
+          <div class="score-item"><div class="val">${d.da}<span style="font-size:11px;color:var(--gray-400)">/25</span></div><div class="lbl">Access</div></div>
+          <div class="score-item"><div class="val">${d.dp}<span style="font-size:11px;color:var(--gray-400)">/20</span></div><div class="lbl">Dinner</div></div>
+          <div class="score-item"><div class="val">${d.hc}<span style="font-size:11px;color:var(--gray-400)">/15</span></div><div class="lbl">HI Connection</div></div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-box full-width">
+            <h4><span class="icon">\u2B50</span> Why They Matter</h4>
+            <p>${d.why}</p>
+          </div>
+          <div class="detail-box">
+            <h4><span class="icon">\uD83D\uDCB0</span> Financial Capacity</h4>
+            <p>${d.fin}</p>
+          </div>
+          <div class="detail-box">
+            <h4><span class="icon">\uD83D\uDD17</span> Donor Access</h4>
+            <p>${d.access}</p>
+          </div>
+          <div class="detail-box full-width">
+            <h4><span class="icon">\uD83C\uDFAF</span> Outreach Strategy</h4>
+            <p>${d.strat}</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderInfluencers() {
+  const list = document.getElementById('influencers-list');
+  list.innerHTML = influencers.map((d, i) => {
+    const rc = rankClass(d.r);
+    const ini = initials(d.n);
+    const col = getColor(i);
+    const netTag = d.net==='High'?'tag-high':d.net==='Med'?'tag-med':d.net==='Low'?'tag-low':'tag-none';
+    return `<div class="prospect-card" data-type="${d.cat}">
+      <div class="prospect-header" onclick="toggleCard(this)">
+        <div class="prospect-rank ${rc}">${d.r}</div>
+        <div class="prospect-summary">
+          <div class="avatar-circle" style="background:${col}">${ini}</div>
+          <div class="prospect-info">
+            <div class="prospect-name"><a href="https://www.instagram.com/${d.h}/" target="_blank" onclick="event.stopPropagation()">${d.n}</a></div>
+            <div class="prospect-subtitle" style="color:var(--teal);font-weight:500">@${d.h}</div>
+            <div class="prospect-blurb">${d.sub}</div>
+          </div>
+        </div>
+        <div class="prospect-meta">
+          <div class="meta-item"><div class="meta-label">Followers</div><div class="meta-value">${d.f.toLocaleString()}</div></div>
+          <div class="meta-item"><div class="meta-label">Hawaii</div><div><span class="tag ${d.hi?'tag-yes':'tag-no'}">${d.hi?'Yes':'No'}</span></div></div>
+          <div class="meta-item"><div class="meta-label">Network</div><div><span class="tag ${netTag}">${d.net}</span></div></div>
+          <div class="expand-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="prospect-detail">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--gray-400)">${d.sub}</div>
+        <div class="detail-grid">
+          <div class="detail-box full-width">
+            <h4><span class="icon">\u2B50</span> Why They Matter</h4>
+            <p>${d.why}</p>
+          </div>
+          <div class="detail-box full-width">
+            <h4><span class="icon">\uD83C\uDFAF</span> Outreach Strategy</h4>
+            <p>${d.strat}</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBusinesses() {
+  const list = document.getElementById('businesses-list');
+  list.innerHTML = businesses.map((d, i) => {
+    const rc = rankClass(d.r);
+    const ini = initials(d.n);
+    const dolTag = d.dol==='Med'?'tag-med':d.dol==='Low'?'tag-low':'tag-none';
+    const netTag = d.net==='High'?'tag-high':d.net==='Med'?'tag-med':d.net==='Low'?'tag-low':'tag-none';
+    return `<div class="prospect-card" data-type="pet_business">
+      <div class="prospect-header" onclick="toggleCard(this)">
+        <div class="prospect-rank ${rc}">${d.r}</div>
+        <div class="prospect-summary">
+          <div class="avatar-circle" style="background:${d.color}">${ini}</div>
+          <div class="prospect-info">
+            <div class="prospect-name"><a href="https://www.instagram.com/${d.h}/" target="_blank" onclick="event.stopPropagation()">${d.n}</a></div>
+            <div class="prospect-subtitle" style="color:var(--teal);font-weight:500">@${d.h}</div>
+            <div class="prospect-blurb">${d.sub}</div>
+          </div>
+        </div>
+        <div class="prospect-meta">
+          <div class="meta-item"><div class="meta-label">Followers</div><div class="meta-value">${d.f.toLocaleString()}</div></div>
+          <div class="meta-item"><div class="meta-label">$ Potential</div><div><span class="tag ${dolTag}">${d.dol}</span></div></div>
+          <div class="meta-item"><div class="meta-label">Network</div><div><span class="tag ${netTag}">${d.net}</span></div></div>
+          <div class="expand-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="prospect-detail">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--gray-400)">${d.sub}</div>
+        <div class="detail-grid">
+          <div class="detail-box full-width">
+            <h4><span class="icon">\u2B50</span> Why They Matter</h4>
+            <p>${d.why}</p>
+          </div>
+          <div class="detail-box">
+            <h4><span class="icon">\uD83D\uDCCD</span> Location</h4>
+            <p>${d.loc}</p>
+          </div>
+          <div class="detail-box">
+            <h4><span class="icon">\uD83D\uDC3E</span> Partnership Type</h4>
+            <p>In-store collection, co-branded events, customer base overlap</p>
+          </div>
+          <div class="detail-box full-width">
+            <h4><span class="icon">\uD83C\uDFAF</span> Outreach Strategy</h4>
+            <p>${d.strat}</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+renderDonors();
+renderInfluencers();
+renderBusinesses();
+</script>
+</body>
+</html>
